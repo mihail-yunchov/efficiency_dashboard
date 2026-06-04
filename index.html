@@ -834,24 +834,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 <div id="dashboard">
   <div class="filters-bar">
     <span class="f-label">Filter</span>
-    <!-- PERIOD A group -->
-    <span id="cmp-label-a" style="display:none;color:#e2e8f0;font-size:11px;font-weight:700;letter-spacing:.5px;margin-right:2px">PERIOD A:</span>
     <div class="ms-wrap" id="eff-ms-year"></div>
     <div class="ms-wrap" id="ms-yr"></div>
-    <button id="cmp-toggle" onclick="toggleCompare()" style="background:#0d1526;border:1px solid #222f48;border-radius:6px;padding:5px 10px;color:#7d93b5;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;outline:none;display:flex;align-items:center;gap:6px;transition:all .15s" onmouseover="if(!this.classList.contains('active'))this.style.borderColor='#5b8dd9'" onmouseout="if(!this.classList.contains('active'))this.style.borderColor='#222f48'"><span>⇄</span><span>Compare</span></button>
-
-    <!-- Line break (only visible in compare mode) -->
-    <div id="cmp-break-1" style="display:none;flex-basis:100%;height:0"></div>
-
-    <!-- PERIOD B group (only visible in compare mode) -->
-    <span id="cmp-label" style="display:none;color:#a78bfa;font-size:11px;font-weight:700;letter-spacing:.5px;margin-right:2px;margin-left:46px">PERIOD B:</span>
-    <div class="ms-wrap" id="eff-ms-year-b" style="display:none"></div>
-    <div class="ms-wrap" id="ms-yr-b" style="display:none"></div>
-
-    <!-- Line break (only visible in compare mode) -->
-    <div id="cmp-break-2" style="display:none;flex-basis:100%;height:0"></div>
-
-    <!-- Shared filters (always visible) -->
     <div class="f-div"></div>
     <div class="ms-wrap" id="ms-sw"></div>
     <div class="ms-wrap" id="ms-pm"></div>
@@ -891,7 +875,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
         <div class="kpi" style="--kc:var(--a2)"><div class="kpi-lbl">Aggregate PM Eff.</div><div class="kpi-val" id="k-pm-agg">—</div><div class="kpi-sub">Total Budget vs Actual</div></div>
         <div class="kpi" style="--kc:#818cf8"><div class="kpi-lbl">SD Hours Logged</div><div class="kpi-val" id="k-sd-h">—</div><div class="kpi-sub" id="k-sd-b"></div></div>
         <div class="kpi" style="--kc:#f472b6"><div class="kpi-lbl">PM Hours Logged</div><div class="kpi-val" id="k-pm-h">—</div><div class="kpi-sub" id="k-pm-b"></div></div>
-        <div class="kpi" style="--kc:#67e8f9"><div class="kpi-lbl">Forecast Accuracy <span class="info-btn">i<span class="info-tooltip">Mean absolute deviation (%) between actual logged hours (iTime) and the first forecast budget (F1 version from iQuote). Lower value = more accurate initial forecast. Only projects with an F1 version and &gt;0 forecasted hours are included. SD and PM shown separately. Formula: mean( |iTime − F1| / F1 × 100 )</span></span></div><div class="kpi-val" id="k-fa">—</div><div class="kpi-sub" id="k-fa-s"></div></div>
         <div class="kpi" id="kpi-rev" style="--kc:#c0784a;display:none"><div class="kpi-lbl">Revised Forecasts</div><div class="kpi-val" id="k-rev">—</div><div class="kpi-sub" id="k-rev-s"></div></div>
       </div>
       <div class="cg2">
@@ -899,23 +882,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
         <div class="cc"><div class="cc-title">PM Efficiency Distribution</div><div class="cc-sub">Projects by efficiency bracket</div><div class="cw" style="height:220px"><canvas id="c-pm-d"></canvas></div></div>
       </div>
       <div class="cg3">
-        <div class="cc"><div class="cc-title">Project Type Mix</div><div class="cc-sub" id="c-type-sub">Count by type</div>
-          <div class="cw" id="c-type-wrap" style="height:200px"><canvas id="c-type"></canvas></div>
-          <div id="c-type-cmp" style="display:none;height:200px;position:relative">
-            <div style="display:flex;gap:8px;height:100%;align-items:center">
-              <div style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                <div style="font-size:10px;color:#e2e8f0;font-weight:700;letter-spacing:.5px;margin-bottom:2px">● PERIOD A</div>
-                <div style="flex:1;width:100%;min-height:0;position:relative"><canvas id="c-type-a"></canvas></div>
-                <div id="c-type-a-count" style="font-size:10px;color:#7d93b5;margin-top:2px">—</div>
-              </div>
-              <div style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                <div style="font-size:10px;color:#a78bfa;font-weight:700;letter-spacing:.5px;margin-bottom:2px">● PERIOD B</div>
-                <div style="flex:1;width:100%;min-height:0;position:relative"><canvas id="c-type-b"></canvas></div>
-                <div id="c-type-b-count" style="font-size:10px;color:#7d93b5;margin-top:2px">—</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="cc"><div class="cc-title">Project Type Mix</div><div class="cc-sub">Count by type</div><div class="cw" style="height:200px"><canvas id="c-type"></canvas></div></div>
         <div class="cc"><div class="cc-title">SD Eff. by Complexity</div><div class="cc-sub">Median per level</div><div class="cw" style="height:200px"><canvas id="c-cplx"></canvas></div></div>
         <div class="cc"><div class="cc-title">Hours by Service Line</div><div class="cc-sub">Total iTime SD + PM</div><div class="cw" style="height:200px"><canvas id="c-sl-ov"></canvas></div></div>
       </div>
@@ -1219,17 +1186,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
   <!-- SUMMARY STRIP -->
   <div class="sec-label">Intelligence Summary</div>
   <div id="summary-strip">
-    <div class="ss-card c-yellow" style="cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--yellow)'" onmouseleave="this.style.borderColor=''" onclick="openMgmtDrawer('📉 Low Hours vs Budget','Projects where iTime is significantly below peers at the same complexity',getMgmtGhostRows())">
+    <div class="ss-card c-yellow" style="cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--yellow)'" onmouseleave="this.style.borderColor=''" onclick="openMgmtDrawer('📉 Low Hours vs Budget','Projects where iTime is significantly below peers at the same complexity',_kpiGhostRows)">
       <div class="ss-lbl">📉 Low Hours vs Budget <span class="info-btn" onclick="event.stopPropagation();showInfo(this,'Low Hours vs Budget','People with a systematic pattern of under-logging vs peers: flagged if 2+ projects have z ≤ −'+getZThresh()+'σ, or 1 project with z ≤ −3σ. Requires ≥5h logged to exclude data quality noise.','Rule: 2+ flagged projects OR single project with |z| ≥ 3σ · min iTime: 5h · IQR-clean log-space')">i</span></div>
       <div class="ss-val" id="s-ghost">—</div>
       <div class="ss-sub">iTime significantly below peers · click to inspect</div>
     </div>
-    <div class="ss-card c-red" style="cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--red)'" onmouseleave="this.style.borderColor=''" onclick="openMgmtDrawer('📈 High Hours vs Budget','Projects where iTime is significantly above peers at the same complexity',getMgmtSkaterRows())">
+    <div class="ss-card c-red" style="cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--red)'" onmouseleave="this.style.borderColor=''" onclick="openMgmtDrawer('📈 High Hours vs Budget','Projects where iTime is significantly above peers at the same complexity',_kpiSkaterRows)">
       <div class="ss-lbl">📈 High Hours vs Budget <span class="info-btn" onclick="event.stopPropagation();showInfo(this,'High Hours vs Budget','People with a systematic pattern of over-logging vs peers: flagged if 2+ projects have z ≥ +'+getZThresh()+'σ, or 1 project with z ≥ +3σ. Requires ≥20h logged to exclude trivial over-runs.','Rule: 2+ flagged projects OR single project with |z| ≥ 3σ · min iTime: 20h · IQR-clean log-space')">i</span></div>
       <div class="ss-val" id="s-high-hours-vs-budget">—</div>
       <div class="ss-sub">iTime significantly above peers · click to inspect</div>
     </div>
-    <div class="ss-card c-red" style="cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--red)'" onmouseleave="this.style.borderColor=''" onclick="openMgmtDrawer('🚩 Red Flags','Projects with SD Efficiency below −200%',getMgmtFlagRows())">
+    <div class="ss-card c-red" style="cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--red)'" onmouseleave="this.style.borderColor=''" onclick="openMgmtDrawer('🚩 Red Flags','Projects with SD Efficiency below −200%',_kpiFlagRows)">
       <div class="ss-lbl">🚩 Red Flags <span class="info-btn" onclick="event.stopPropagation();showInfo(this,'Red Flags','Projects where actual logged hours exceeded the iQuote SD budget by more than 3× (SD Efficiency below −200%). These represent the most severe over-runs and require review.','SD Eff. = (Budget − iTime) / Budget × 100 · threshold: < −200%')">i</span></div>
       <div class="ss-val" id="s-flags">—</div>
       <div class="ss-sub">SD Eff. below −200% · click to inspect</div>
@@ -1587,7 +1554,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
   // SHA-256 hash of the placeholder password "test123"
   // To change: compute SHA-256 of your password and replace this value
   // See browser console: await window.Shell.computeHash('your-password')
-  const CORRECT_HASH = 'd254da740d992a99e9da3b2a401cbbd6b1f66f7347206704426d882da3241032';
+  const CORRECT_HASH = 'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae';
 
   // ─────────────────────────────────────────────────────────────
   // SHA-256 HELPER (exposed for easy hash generation)
@@ -1904,14 +1871,9 @@ function buildData(effR,zohoR,itimeR,fname,posR=[],budgetType='zoho'){
     const revMap={};
     for(const [base,{entries}] of Object.entries(iqBaseMap)){
       const fE=entries.filter(e=>e.type==='F').sort((a,b)=>a.ver-b.ver);
-      if(fE.length<1)continue;
+      if(fE.length<2)continue;
       const first=fE[0],last=fE[fE.length-1];
-      // Store F1 (first forecast) for Forecast Accuracy calculation
-      if(zb[last.k]){
-        zb[last.k].f1_sd = first.sd;
-        zb[last.k].f1_pm = first.pm;
-        if(fE.length>=2) revMap[last.k]={delta_sd:last.sd-first.sd,delta_pm:last.pm-first.pm};
-      }
+      if(zb[last.k])revMap[last.k]={delta_sd:last.sd-first.sd,delta_pm:last.pm-first.pm};
     }
     for(const [k,rev] of Object.entries(revMap)){if(zb[k])Object.assign(zb[k],rev);}
   } else {
@@ -1962,8 +1924,7 @@ function buildData(effR,zohoR,itimeR,fname,posR=[],budgetType='zoho'){
       itime_sd:it.sd,itime_pm:it.pm,budget_sd:bu.sd,budget_pm:bu.pm,
       sd_eff:bu.sd>0?(bu.sd-it.sd)/bu.sd*100:null,pm_eff:bu.pm>0?(bu.pm-it.pm)/bu.pm*100:null,
       iqVer:bu.iqVer||null,cancelled:bu.cancelled||null,
-      delta_sd:bu.delta_sd!=null?bu.delta_sd:null,delta_pm:bu.delta_pm!=null?bu.delta_pm:null,
-      f1_sd:bu.f1_sd!=null?bu.f1_sd:null, f1_pm:bu.f1_pm!=null?bu.f1_pm:null})
+      delta_sd:bu.delta_sd!=null?bu.delta_sd:null,delta_pm:bu.delta_pm!=null?bu.delta_pm:null})
   }
   G={projects,personHours:ph,filename:fname,_itimeRows:itimeR,_raw:{effR,zohoR,itimeR,fname}};
   initDash();
@@ -1994,12 +1955,6 @@ function buildFilters(){
     FSEL[fd.id]=new Set();
     buildMS(fd.id,fd.lbl,vals,fd.labelFmt);
   }
-  // Cache full month-key list (used by rebuildMonthList when Year filter changes)
-  _allMonthKeys = [...new Set(G.projects.map(p=>String(p.monthKey||'')).filter(Boolean))].sort();
-  // Build Period B multi-selects
-  const yearVals=[...new Set(G.projects.map(p=>String(p.yearStart||'')).filter(Boolean))].sort();
-  buildPeriodB(_allMonthKeys);
-  buildPeriodBYear(yearVals);
 }
 
 function buildMS(wid,lbl,vals,labelFmt){
@@ -2017,19 +1972,14 @@ function buildMS(wid,lbl,vals,labelFmt){
 
 function msToggle(wid,v,item){
   const s=FSEL[wid];s.has(v)?s.delete(v):s.add(v);
-  item.classList.toggle('checked',s.has(v));updateTrig(wid);
-  // If the user changed Year A, rebuild Month A list to reflect new scope
-  if(wid==='ms-yr') rebuildMonthList('A');
-  renderAll();
+  item.classList.toggle('checked',s.has(v));updateTrig(wid);renderAll();
 }
 function msSel(wid,all){
   FSEL[wid].clear();
   const items=document.querySelectorAll(`#${wid}-l .ms-item`);
   if(all){items.forEach(i=>{if(!i.classList.contains('hidden')){FSEL[wid].add(i.dataset.v);i.classList.add('checked')}})}
   else{items.forEach(i=>i.classList.remove('checked'))}
-  updateTrig(wid);
-  if(wid==='ms-yr') rebuildMonthList('A');
-  renderAll();
+  updateTrig(wid);renderAll();
 }
 function msSearch(inp,wid){
   const q=inp.value.toLowerCase();
@@ -2051,259 +2001,12 @@ document.addEventListener('click',closeDrops);
 function resetAll(){const rfEl=document.getElementById('f-revised');if(rfEl)rfEl.value='';for(const fd of FD){FSEL[fd.id]=new Set();document.querySelectorAll(`#${fd.id}-l .ms-item`).forEach(i=>i.classList.remove('checked'));updateTrig(fd.id)}
   const jbEl=document.getElementById('jb-search');if(jbEl)jbEl.value='';
   _jbFilter='';
-  // Exit compare mode and clear Period B
-  if(_compareMode){toggleCompare();} else {renderAll();}
-}
+  renderAll()}
 let _jbFilter='';
 function filterJB(v){
   _jbFilter=v.trim().toLowerCase();
   renderAll();
 }
-// ═══════════════════════════════════════════════════════════════
-// COMPARE MODE — Period A vs Period B (Month-Year multi-select)
-// ═══════════════════════════════════════════════════════════════
-let _compareMode = false;
-let _periodB = new Set();       // monthKey values for Period B
-let _periodBYears = new Set();  // yearStart values for Period B
-let _allMonthKeys = [];         // full list of monthKey values (cached on data load)
-
-const monthFmt = v=>{const[y,m]=v.split('-');return['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)]+' '+y};
-
-function toggleCompare(){
-  _compareMode = !_compareMode;
-  const btn = document.getElementById('cmp-toggle');
-  const wrapMonthB = document.getElementById('eff-ms-year-b');
-  const wrapYearB = document.getElementById('ms-yr-b');
-  const lblA = document.getElementById('cmp-label-a');
-  const lblB = document.getElementById('cmp-label');
-  const break1 = document.getElementById('cmp-break-1');
-  const break2 = document.getElementById('cmp-break-2');
-  const kpiRow = document.querySelector('#eff-tab-overview .kpi-row');
-
-  if(_compareMode){
-    btn.classList.add('active');
-    btn.style.background = '#a855f7';
-    btn.style.borderColor = '#a855f7';
-    btn.style.color = 'white';
-    btn.innerHTML = '<span>⇄</span><span>Exit Compare</span>';
-    // Show compare-mode row layout
-    lblA.style.display = '';
-    break1.style.display = '';
-    lblB.style.display = '';
-    wrapMonthB.style.display = '';
-    wrapYearB.style.display = '';
-    break2.style.display = '';
-    if(kpiRow) kpiRow.classList.add('cmp-active');
-  } else {
-    btn.classList.remove('active');
-    btn.style.background = '#0d1526';
-    btn.style.borderColor = '#222f48';
-    btn.style.color = '#7d93b5';
-    btn.innerHTML = '<span>⇄</span><span>Compare</span>';
-    lblA.style.display = 'none';
-    break1.style.display = 'none';
-    lblB.style.display = 'none';
-    wrapMonthB.style.display = 'none';
-    wrapYearB.style.display = 'none';
-    break2.style.display = 'none';
-    // Clear Period B selections
-    _periodB.clear();
-    _periodBYears.clear();
-    document.querySelectorAll('#eff-ms-year-b-l .ms-item').forEach(i=>i.classList.remove('checked'));
-    document.querySelectorAll('#ms-yr-b-l .ms-item').forEach(i=>i.classList.remove('checked'));
-    updateTrigMonthB();
-    updateTrigYearB();
-    if(kpiRow) kpiRow.classList.remove('cmp-active');
-  }
-  renderAll();
-}
-
-// Rebuild Month list for a given period based on Year filter
-// period: 'A' uses FSEL['ms-yr'] to filter; 'B' uses _periodBYears
-function rebuildMonthList(period){
-  const wid = period==='A' ? 'eff-ms-year' : 'eff-ms-year-b';
-  const listEl = document.getElementById(wid+'-l');
-  if(!listEl) return;
-  const yearFilter = period==='A' ? FSEL['ms-yr'] : _periodBYears;
-  const monthSet   = period==='A' ? FSEL['eff-ms-year'] : _periodB;
-
-  const filtered = _allMonthKeys.filter(mk=>{
-    if(!yearFilter || yearFilter.size===0) return true;
-    const y = mk.split('-')[0];
-    return yearFilter.has(y);
-  });
-
-  // Drop any selected months that no longer match the Year filter
-  let cleared=false;
-  for(const mk of [...monthSet]){
-    if(!filtered.includes(mk)){monthSet.delete(mk);cleared=true;}
-  }
-
-  // Rebuild the item list
-  listEl.innerHTML='';
-  for(const v of filtered){
-    const item = document.createElement('div');
-    item.className = 'ms-item' + (monthSet.has(v)?' checked':'');
-    item.dataset.v = v;
-    item.innerHTML = `<div class="ms-chk"></div><span>${monthFmt(v)}</span>`;
-    if(period==='A'){
-      item.onclick = e=>{e.stopPropagation();msToggle('eff-ms-year',v,item)};
-    } else {
-      item.onclick = e=>{e.stopPropagation();msToggleMonthB(v,item)};
-    }
-    listEl.appendChild(item);
-  }
-
-  if(period==='A') updateTrig('eff-ms-year'); else updateTrigMonthB();
-  return cleared;
-}
-
-// Build Period B Month multi-select
-function buildPeriodB(vals){
-  const wid = 'eff-ms-year-b';
-  const w = document.getElementById(wid);
-  if(!w) return;
-  w.innerHTML = '';
-  const trig = document.createElement('div');
-  trig.className = 'ms-trigger';
-  trig.id = wid+'-t';
-  trig.style.borderColor = '#a855f7';
-  trig.innerHTML = `<span class="ms-txt" style="color:#a78bfa">Month B: All</span><span class="ms-arr">▾</span>`;
-  const drop = document.createElement('div');
-  drop.className = 'ms-drop';
-  drop.id = wid+'-d';
-  drop.innerHTML = `<div class="ms-srch"><input type="text" placeholder="Search…" oninput="msSearchMonthB(this)"></div><div class="ms-acts"><button class="ms-act" onclick="msSelMonthB(true)">Select All</button><button class="ms-act" onclick="msSelMonthB(false)">Clear All</button></div><div class="ms-list" id="${wid}-l"></div>`;
-  drop.addEventListener('click',e=>e.stopPropagation());
-  const list = drop.querySelector('.ms-list');
-  for(const v of vals){
-    const item = document.createElement('div');
-    item.className = 'ms-item';
-    item.dataset.v = v;
-    item.innerHTML = `<div class="ms-chk"></div><span>${monthFmt(v)}</span>`;
-    item.onclick = e=>{e.stopPropagation();msToggleMonthB(v,item)};
-    list.appendChild(item);
-  }
-  trig.onclick = e=>{e.stopPropagation();const isO=drop.classList.contains('open');closeDrops();if(!isO){drop.classList.add('open');trig.classList.add('open')}};
-  w.appendChild(trig);
-  w.appendChild(drop);
-}
-
-// Build Period B Year multi-select
-function buildPeriodBYear(vals){
-  const wid = 'ms-yr-b';
-  const w = document.getElementById(wid);
-  if(!w) return;
-  w.innerHTML = '';
-  const trig = document.createElement('div');
-  trig.className = 'ms-trigger';
-  trig.id = wid+'-t';
-  trig.style.borderColor = '#a855f7';
-  trig.innerHTML = `<span class="ms-txt" style="color:#a78bfa">Year B: All</span><span class="ms-arr">▾</span>`;
-  const drop = document.createElement('div');
-  drop.className = 'ms-drop';
-  drop.id = wid+'-d';
-  drop.innerHTML = `<div class="ms-srch"><input type="text" placeholder="Search…" oninput="msSearchYearB(this)"></div><div class="ms-acts"><button class="ms-act" onclick="msSelYearB(true)">Select All</button><button class="ms-act" onclick="msSelYearB(false)">Clear All</button></div><div class="ms-list" id="${wid}-l"></div>`;
-  drop.addEventListener('click',e=>e.stopPropagation());
-  const list = drop.querySelector('.ms-list');
-  for(const v of vals){
-    const item = document.createElement('div');
-    item.className = 'ms-item';
-    item.dataset.v = v;
-    item.innerHTML = `<div class="ms-chk"></div><span>${v}</span>`;
-    item.onclick = e=>{e.stopPropagation();msToggleYearB(v,item)};
-    list.appendChild(item);
-  }
-  trig.onclick = e=>{e.stopPropagation();const isO=drop.classList.contains('open');closeDrops();if(!isO){drop.classList.add('open');trig.classList.add('open')}};
-  w.appendChild(trig);
-  w.appendChild(drop);
-}
-
-// Period B — Month handlers
-function msToggleMonthB(v, item){
-  _periodB.has(v) ? _periodB.delete(v) : _periodB.add(v);
-  item.classList.toggle('checked', _periodB.has(v));
-  updateTrigMonthB();
-  renderAll();
-}
-function msSelMonthB(all){
-  const items = document.querySelectorAll('#eff-ms-year-b-l .ms-item');
-  if(all){items.forEach(i=>{if(!i.classList.contains('hidden')){_periodB.add(i.dataset.v);i.classList.add('checked')}})}
-  else{_periodB.clear();items.forEach(i=>i.classList.remove('checked'))}
-  updateTrigMonthB();
-  renderAll();
-}
-function msSearchMonthB(inp){
-  const q = inp.value.toLowerCase();
-  document.querySelectorAll('#eff-ms-year-b-l .ms-item').forEach(i=>i.classList.toggle('hidden', !i.dataset.v.toLowerCase().includes(q)));
-}
-function updateTrigMonthB(){
-  const t = document.getElementById('eff-ms-year-b-t');
-  if(!t) return;
-  let txt, bdg='';
-  if(_periodB.size===0){txt='Month B: All'}
-  else if(_periodB.size===1){const v=[..._periodB][0];txt=monthFmt(v);bdg=`<span class="ms-bdg" style="background:#a855f7">1</span>`}
-  else{txt=`Month B: ${_periodB.size} selected`;bdg=`<span class="ms-bdg" style="background:#a855f7">${_periodB.size}</span>`}
-  t.innerHTML = `<span class="ms-txt" style="color:#a78bfa">${txt}</span>${bdg}<span class="ms-arr">▾</span>`;
-  t.onclick = e=>{e.stopPropagation();const d=document.getElementById('eff-ms-year-b-d'),isO=d.classList.contains('open');closeDrops();if(!isO){d.classList.add('open');t.classList.add('open')}};
-}
-
-// Period B — Year handlers
-function msToggleYearB(v, item){
-  _periodBYears.has(v) ? _periodBYears.delete(v) : _periodBYears.add(v);
-  item.classList.toggle('checked', _periodBYears.has(v));
-  updateTrigYearB();
-  rebuildMonthList('B');
-  renderAll();
-}
-function msSelYearB(all){
-  const items = document.querySelectorAll('#ms-yr-b-l .ms-item');
-  if(all){items.forEach(i=>{if(!i.classList.contains('hidden')){_periodBYears.add(i.dataset.v);i.classList.add('checked')}})}
-  else{_periodBYears.clear();items.forEach(i=>i.classList.remove('checked'))}
-  updateTrigYearB();
-  rebuildMonthList('B');
-  renderAll();
-}
-function msSearchYearB(inp){
-  const q = inp.value.toLowerCase();
-  document.querySelectorAll('#ms-yr-b-l .ms-item').forEach(i=>i.classList.toggle('hidden', !i.dataset.v.toLowerCase().includes(q)));
-}
-function updateTrigYearB(){
-  const t = document.getElementById('ms-yr-b-t');
-  if(!t) return;
-  let txt, bdg='';
-  if(_periodBYears.size===0){txt='Year B: All'}
-  else if(_periodBYears.size===1){const v=[..._periodBYears][0];txt=v;bdg=`<span class="ms-bdg" style="background:#a855f7">1</span>`}
-  else{txt=`Year B: ${_periodBYears.size} selected`;bdg=`<span class="ms-bdg" style="background:#a855f7">${_periodBYears.size}</span>`}
-  t.innerHTML = `<span class="ms-txt" style="color:#a78bfa">${txt}</span>${bdg}<span class="ms-arr">▾</span>`;
-  t.onclick = e=>{e.stopPropagation();const d=document.getElementById('ms-yr-b-d'),isO=d.classList.contains('open');closeDrops();if(!isO){d.classList.add('open');t.classList.add('open')}};
-}
-
-// filterPB = same as filterP but uses _periodB for monthKey instead of FSEL['eff-ms-year']
-function filterPB(){
-  if(!_compareMode) return [];
-  // Period B must have at least Month B or Year B active (or both)
-  if(_periodB.size===0 && _periodBYears.size===0) return [];
-  const revSel=document.getElementById('f-revised')?.value||'';
-  return G.projects.filter(p=>{
-    // Month B filter (if set)
-    if(_periodB.size>0 && !_periodB.has(String(p.monthKey||''))) return false;
-    // Year B filter (if set)
-    if(_periodBYears.size>0 && !_periodBYears.has(String(p.yearStart||''))) return false;
-    // Apply ALL other filters (teams, SL, etc.) EXCEPT eff-ms-year and ms-yr (Period A)
-    for(const fd of FD){
-      if(fd.id==='eff-ms-year' || fd.id==='ms-yr') continue;
-      const s=FSEL[fd.id];
-      if(!s||s.size===0) continue;
-      if(!s.has(String(p[fd.key]||''))) return false;
-    }
-    if(_jbFilter&&!(p.jb||'').toLowerCase().includes(_jbFilter)&&
-      !(p.name||'').toLowerCase().includes(_jbFilter)) return false;
-    if(revSel==='yes'&&!(p.delta_sd!=null||p.delta_pm!=null)) return false;
-    if(revSel==='no'&&(p.delta_sd!=null||p.delta_pm!=null)) return false;
-    return true;
-  });
-}
-
 function filterP(){
   const revSel=document.getElementById('f-revised')?.value||'';
   return G.projects.filter(p=>{
@@ -2337,517 +2040,132 @@ function sn(n){const p=n.trim().split(' ');return p.length>1?p[0][0]+'. '+p.slic
 // RENDER
 function renderAll(){const ps=filterP();renderOv(ps);renderTeams(ps);renderSL(ps);renderPeople(ps);renderTrend(ps)}
 
-// ═══════════════════════════════════════════════════════════════
-// SHARED HELPERS for Hours Breakdown tables (Overview + Teams)
-// ═══════════════════════════════════════════════════════════════
-function _hrsRowSingle(label,p2){
-  const isd=p2.reduce((s,p)=>s+p.itime_sd,0),bsd=p2.reduce((s,p)=>s+p.budget_sd,0);
-  const ipm=p2.reduce((s,p)=>s+p.itime_pm,0),bpm=p2.reduce((s,p)=>s+p.budget_pm,0);
-  const dsd=bsd>0?isd-bsd:null, dpm=bpm>0?ipm-bpm:null;
-  const asd2=bsd>0?(bsd-isd)/bsd*100:null, apm2=bpm>0?(bpm-ipm)/bpm*100:null;
-  const dCls=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
-  const dFmt=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
-  return`<tr>
-    <td style="font-weight:500">${label}</td>
-    <td>${p2.length}</td>
-    <td>${fmtN(isd)}</td><td>${fmtN(bsd)}</td>
-    <td ${dCls(dsd)}>${dFmt(dsd)}</td>
-    <td>${fmtN(ipm)}</td><td>${fmtN(bpm)}</td>
-    <td ${dCls(dpm)}>${dFmt(dpm)}</td>
-    <td style="font-weight:600">${fmtN(isd+ipm)}</td>
-    <td style="font-weight:600">${fmtN(bsd+bpm)}</td>
-    <td><span class="eb ${ecls(asd2)}">${fmt(asd2)}</span></td>
-    <td><span class="eb ${ecls(apm2)}">${fmt(apm2)}</span></td>
-  </tr>`;
-}
-
-function _hrsRowPair(label,pA,pB){
-  const calc=(p2)=>{
-    const isd=p2.reduce((s,p)=>s+p.itime_sd,0),bsd=p2.reduce((s,p)=>s+p.budget_sd,0);
-    const ipm=p2.reduce((s,p)=>s+p.itime_pm,0),bpm=p2.reduce((s,p)=>s+p.budget_pm,0);
-    return{isd,bsd,ipm,bpm,
-      dsd:bsd>0?isd-bsd:null, dpm:bpm>0?ipm-bpm:null,
-      asd:bsd>0?(bsd-isd)/bsd*100:null, apm:bpm>0?(bpm-ipm)/bpm*100:null,
-      cnt:p2.length};
-  };
-  const a=calc(pA), b=calc(pB);
-  const dCls=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
-  const dFmt=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
-  const aRow=`<tr style="border-bottom:1px dashed rgba(91,141,217,.15)">
-    <td style="font-weight:500" rowspan="2">${label}</td>
-    <td><span style="background:#1e2d45;color:#e2e8f0;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">A</span>${a.cnt}</td>
-    <td>${fmtN(a.isd)}</td><td>${fmtN(a.bsd)}</td>
-    <td ${dCls(a.dsd)}>${dFmt(a.dsd)}</td>
-    <td>${fmtN(a.ipm)}</td><td>${fmtN(a.bpm)}</td>
-    <td ${dCls(a.dpm)}>${dFmt(a.dpm)}</td>
-    <td style="font-weight:600">${fmtN(a.isd+a.ipm)}</td>
-    <td style="font-weight:600">${fmtN(a.bsd+a.bpm)}</td>
-    <td><span class="eb ${ecls(a.asd)}">${fmt(a.asd)}</span></td>
-    <td><span class="eb ${ecls(a.apm)}">${fmt(a.apm)}</span></td>
-  </tr>`;
-  const bRow=`<tr style="background:rgba(168,85,247,.04);border-bottom:1px solid var(--border)">
-    <td><span style="background:#4c1d95;color:#e9d5ff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">B</span>${b.cnt}</td>
-    <td style="color:#c4b5fd">${fmtN(b.isd)}</td><td style="color:#c4b5fd">${fmtN(b.bsd)}</td>
-    <td ${dCls(b.dsd)}>${dFmt(b.dsd)}</td>
-    <td style="color:#c4b5fd">${fmtN(b.ipm)}</td><td style="color:#c4b5fd">${fmtN(b.bpm)}</td>
-    <td ${dCls(b.dpm)}>${dFmt(b.dpm)}</td>
-    <td style="font-weight:600;color:#c4b5fd">${fmtN(b.isd+b.ipm)}</td>
-    <td style="font-weight:600;color:#c4b5fd">${fmtN(b.bsd+b.bpm)}</td>
-    <td><span class="eb ${ecls(b.asd)}">${fmt(b.asd)}</span></td>
-    <td><span class="eb ${ecls(b.apm)}">${fmt(b.apm)}</span></td>
-  </tr>`;
-  return aRow+bRow;
-}
-
-// Render a hours-breakdown table body with auto compare/normal mode
-// tbodyId: target <tbody> element ID
-// groupKey: project key to group by ('serviceLine', 'projectType', 'swTeam', 'pmTeam')
-// psA, psB: project arrays (psB ignored in normal mode)
-// cmp: compare mode flag
-function applyHrsBreakdownTable(tbodyId, groupKey, psA, psB, cmp){
-  const el = $$(tbodyId);
-  if(!el) return;
-  const gA = grp(psA, groupKey);
-  if(cmp){
-    const gB = grp(psB, groupKey);
-    const unionKeys = [...new Set([...Object.keys(gA),...Object.keys(gB)])].filter(Boolean);
-    const keysSorted = unionKeys.sort((a,b)=>{
-      const ta=(gA[b]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)+(gB[b]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0);
-      const tb=(gA[a]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)+(gB[a]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0);
-      return ta-tb;
-    });
-    const totalPair = _hrsRowPair('TOTAL',psA,psB)
-      .replace(/<tr /g,'<tr data-total="1" ')
-      .replace('<tr data-total="1" style="border-bottom:1px dashed rgba(91,141,217,.15)">','<tr data-total="1" style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
-    el.innerHTML = keysSorted.map(k=>_hrsRowPair(k,gA[k]||[],gB[k]||[])).join('')+totalPair;
-  } else {
-    const keys = Object.keys(gA).filter(Boolean).sort((a,b)=>gA[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-gA[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
-    el.innerHTML = keys.map(k=>_hrsRowSingle(k,gA[k])).join('')+_hrsRowSingle('TOTAL',psA).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
-  }
-}
-
-// Compute KPI metrics for a given project set (used for Period A and Period B)
-function computeOvKpis(ps){
+function renderOv(ps){
+  window._ovPs=ps; // store for click handlers
   const sdv=ps.filter(p=>p.budget_sd>0),pmv=ps.filter(p=>p.budget_pm>0);
   const tbsd=sdv.reduce((s,p)=>s+p.budget_sd,0),tisd=sdv.reduce((s,p)=>s+p.itime_sd,0);
   const tbpm=pmv.reduce((s,p)=>s+p.budget_pm,0),tipm=pmv.reduce((s,p)=>s+p.itime_pm,0);
-  // Forecast Accuracy: mean absolute % deviation of actual iTime vs F1 (first forecast)
-  // Lower value = more accurate initial forecast
-  const f1sd_projects = ps.filter(p=>p.f1_sd>0);
-  const f1pm_projects = ps.filter(p=>p.f1_pm>0);
-  const faSD = f1sd_projects.length
-    ? f1sd_projects.reduce((s,p)=>s+Math.abs(p.itime_sd-p.f1_sd)/p.f1_sd*100,0)/f1sd_projects.length
-    : null;
-  const faPM = f1pm_projects.length
-    ? f1pm_projects.reduce((s,p)=>s+Math.abs(p.itime_pm-p.f1_pm)/p.f1_pm*100,0)/f1pm_projects.length
-    : null;
-  return {
-    count: ps.length,
-    sdBudgetCount: sdv.length,
-    pmBudgetCount: pmv.length,
-    aggSD: tbsd>0?(tbsd-tisd)/tbsd*100:null,
-    aggPM: tbpm>0?(tbpm-tipm)/tbpm*100:null,
-    totItimeSD: ps.reduce((s,p)=>s+p.itime_sd,0),
-    totItimePM: ps.reduce((s,p)=>s+p.itime_pm,0),
-    faSD, faPM,
-    faSDCount: f1sd_projects.length,
-    faPMCount: f1pm_projects.length,
-    tbsd, tbpm
-  };
-}
-
-// Render a KPI value in compare mode: A · B · Δ
-function setKpiCompare(id, valA, valB, fmtFn, deltaUnit){
-  const e = $$(id);
-  if(!e) return;
-  const fa = valA==null?'—':fmtFn(valA);
-  const fb = valB==null?'—':fmtFn(valB);
-  let deltaHTML = '';
-  if(valA!=null && valB!=null){
-    const d = valA - valB;
-    const col = d>0?'#4f9e72':d<0?'#c96060':'#7d93b5';
-    const arr = d>0?'▲':d<0?'▼':'●';
-    const sign = d>0?'+':'';
-    const dv = Math.abs(d) < 0.05 ? '0' : d.toFixed(1);
-    deltaHTML = `<div style="font-size:11px;color:${col};font-weight:600;margin-top:2px">${arr} ${sign}${dv}${deltaUnit||''}</div>`;
-  }
-  e.innerHTML = `<div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:17px;color:#e2e8f0;font-weight:700">${fa}</div><div style="font-size:13px;color:#a78bfa;font-weight:600">${fb}</div>${deltaHTML}</div>`;
-  e.className = 'kpi-val';
-  e.style.fontSize = '';
-}
-
-function renderOv(ps){
-  window._ovPs=ps; // store for click handlers
-  const cmp = _compareMode && _periodB.size>0;
-  const psB = cmp ? filterPB() : null;
-  const A = computeOvKpis(ps);
-  const B = cmp ? computeOvKpis(psB) : null;
-
-  // Period header (shown only in compare mode)
-  let hdrEl = document.getElementById('kpi-period-hdr');
-  if(cmp){
-    const labelFmt = v=>{const[y,m]=v.split('-');return['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)]+' '+y};
-    const aMonths=FSEL['eff-ms-year']&&FSEL['eff-ms-year'].size>0?[...FSEL['eff-ms-year']].sort().map(labelFmt).join(', '):'All months';
-    const bMonths=[..._periodB].sort().map(labelFmt).join(', ');
-    const aTxt = aMonths.length>60?aMonths.slice(0,58)+'…':aMonths;
-    const bTxt = bMonths.length>60?bMonths.slice(0,58)+'…':bMonths;
-    if(!hdrEl){
-      hdrEl=document.createElement('div');
-      hdrEl.id='kpi-period-hdr';
-      hdrEl.style.cssText='display:flex;gap:18px;font-size:11px;margin-bottom:10px;letter-spacing:.3px;flex-wrap:wrap';
-      const secLbl=document.querySelector('#eff-tab-overview .sec-lbl');
-      if(secLbl) secLbl.parentNode.insertBefore(hdrEl, secLbl.nextSibling);
-    }
-    hdrEl.innerHTML=`<span style="color:#e2e8f0;font-weight:600">● PERIOD A: <span style="color:#7d93b5;font-weight:400">${aTxt}</span> <span style="color:#7d93b5">(${A.count} projects)</span></span><span style="color:#a78bfa;font-weight:600">● PERIOD B: <span style="color:#7d93b5;font-weight:400">${bTxt}</span> <span style="color:#7d93b5">(${B.count} projects)</span></span>`;
-    hdrEl.style.display='flex';
-  } else if(hdrEl){
-    hdrEl.style.display='none';
-  }
-
-  if(cmp){
-    // Compare mode — A · B · Δ in each KPI card
-    const dCount = A.count - B.count;
-    const dCol = dCount>0?'#4f9e72':dCount<0?'#c96060':'#7d93b5';
-    const dArr = dCount>0?'▲':dCount<0?'▼':'●';
-    const dSign = dCount>0?'+':'';
-    $$('k-tot').innerHTML = `<div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:17px;color:#e2e8f0;font-weight:700">${A.count.toLocaleString()}</div><div style="font-size:13px;color:#a78bfa;font-weight:600">${B.count.toLocaleString()}</div><div style="font-size:11px;color:${dCol};font-weight:600;margin-top:2px">${dArr} ${dSign}${dCount}</div></div>`;
-    $$('k-tot').className='kpi-val';$$('k-tot').style.fontSize='';
-    // SD / PM budget counts with Δ between A and B (overlapping sets — don't sum)
-    const dSD = A.sdBudgetCount - B.sdBudgetCount;
-    const dPM = A.pmBudgetCount - B.pmBudgetCount;
-    const arrSD = dSD>0?'▲':dSD<0?'▼':'●', arrPM = dPM>0?'▲':dPM<0?'▼':'●';
-    const colSD = dSD>0?'#4f9e72':dSD<0?'#c96060':'#7d93b5';
-    const colPM = dPM>0?'#4f9e72':dPM<0?'#c96060':'#7d93b5';
-    const sgnSD = dSD>0?'+':'', sgnPM = dPM>0?'+':'';
-    $$('k-tot-s').innerHTML = `<div style="line-height:1.5">SD budget: A ${A.sdBudgetCount} → B ${B.sdBudgetCount} <span style="color:${colSD};font-weight:600">${arrSD} ${sgnSD}${dSD}</span><br>PM budget: A ${A.pmBudgetCount} → B ${B.pmBudgetCount} <span style="color:${colPM};font-weight:600">${arrPM} ${sgnPM}${dPM}</span></div>`;
-    setKpiCompare('k-sd-agg', A.aggSD, B.aggSD, v=>(v>=0?'+':'')+v.toFixed(1)+'%', 'pp');
-    setKpiCompare('k-pm-agg', A.aggPM, B.aggPM, v=>(v>=0?'+':'')+v.toFixed(1)+'%', 'pp');
-    setKpiCompare('k-sd-h', A.totItimeSD, B.totItimeSD, fmtH, 'h');
-    $$('k-sd-b').textContent = `Budget A: ${fmtN(A.tbsd)} h · B: ${fmtN(B.tbsd)} h`;
-    setKpiCompare('k-pm-h', A.totItimePM, B.totItimePM, fmtH, 'h');
-    $$('k-pm-b').textContent = `Budget A: ${fmtN(A.tbpm)} h · B: ${fmtN(B.tbpm)} h`;
-    // Forecast Accuracy in compare mode (lower = better; delta sign: A - B)
-    const faFmt = v => v==null ? '—' : v.toFixed(1)+'%';
-    const e = $$('k-fa');
-    if(e){
-      const fa = A.faSD, fb = B.faSD;
-      const lineA = `<span style="color:#67e8f9">SD:</span> ${faFmt(fa)}`;
-      const lineB = `<span style="color:#a78bfa">SD:</span> ${faFmt(fb)}`;
-      const lineAP = A.faPM!=null?` · <span style="color:#67e8f9">PM:</span> ${faFmt(A.faPM)}`:'';
-      const lineBP = B.faPM!=null?` · <span style="color:#a78bfa">PM:</span> ${faFmt(B.faPM)}`:'';
-      let deltaHTML='';
-      if(fa!=null && fb!=null){
-        const d = fa - fb;
-        const col = d<0?'#4f9e72':d>0?'#c96060':'#7d93b5'; // negative delta = improvement (more accurate)
-        const arr = d<0?'▲':d>0?'▼':'●'; // ▲ = better, ▼ = worse
-        const sign = d>0?'+':'';
-        deltaHTML = `<div style="font-size:11px;color:${col};font-weight:600;margin-top:2px">${arr} ${sign}${d.toFixed(1)}pp SD</div>`;
-      }
-      e.innerHTML = `<div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:13px;font-weight:700">${lineA}${lineAP}</div><div style="font-size:13px;font-weight:700">${lineB}${lineBP}</div>${deltaHTML}</div>`;
-      e.className='kpi-val';
-      e.style.fontSize='';
-    }
-    $$('k-fa-s').textContent = `SD: ${A.faSDCount} A / ${B.faSDCount} B  ·  PM: ${A.faPMCount} A / ${B.faPMCount} B`;
-  } else {
-    // Normal mode — single-period KPIs
-    $$('k-tot').textContent=ps.length.toLocaleString();
-    $$('k-tot-s').textContent=`${A.sdBudgetCount} with SD budget · ${A.pmBudgetCount} with PM budget`;
-    setKpi('k-sd-agg',A.aggSD);setKpi('k-pm-agg',A.aggPM);
-    $$('k-sd-h').textContent=fmtH(A.totItimeSD);$$('k-sd-b').textContent=`Budget: ${fmtN(A.tbsd)} h`;
-    $$('k-pm-h').textContent=fmtH(A.totItimePM);$$('k-pm-b').textContent=`Budget: ${fmtN(A.tbpm)} h`;
-    // Forecast Accuracy — normal mode: show SD · PM
-    const faEl = $$('k-fa');
-    if(faEl){
-      const faFmt2 = v => v==null ? '—' : v.toFixed(1)+'%';
-      const parts = [];
-      if(A.faSD!=null) parts.push(`SD: ${faFmt2(A.faSD)}`);
-      if(A.faPM!=null) parts.push(`PM: ${faFmt2(A.faPM)}`);
-      const joined = parts.length ? parts.join(' · ') : '—';
-      faEl.innerHTML = `<span style="font-size:17px;font-weight:700;color:#e2e8f0">${joined}</span>`;
-      faEl.className='kpi-val';
-      faEl.style.fontSize='';
-    }
-    $$('k-fa-s').textContent = A.faSDCount>0||A.faPMCount>0
-      ? `Based on F1 forecasts · SD: ${A.faSDCount} · PM: ${A.faPMCount} proj.`
-      : 'No F1 forecasts available';
-  }
+  const asd=tbsd>0?(tbsd-tisd)/tbsd*100:null,apm=tbpm>0?(tbpm-tipm)/tbpm*100:null;
+  const effs=ps.map(p=>p.sd_eff).filter(v=>v!=null),msd=effs.length?med(effs):null;
+  const totsd=ps.reduce((s,p)=>s+p.itime_sd,0),totpm=ps.reduce((s,p)=>s+p.itime_pm,0);
+  $$('k-tot').textContent=ps.length.toLocaleString();
+  $$('k-tot-s').textContent=`${sdv.length} with SD budget · ${pmv.length} with PM budget`;
+  setKpi('k-sd-agg',asd);setKpi('k-pm-agg',apm);setKpi('k-sd-med',msd);
+  $$('k-sd-h').textContent=fmtH(totsd);$$('k-sd-b').textContent=`Budget: ${fmtN(tbsd)} h`;
+  $$('k-pm-h').textContent=fmtH(totpm);$$('k-pm-b').textContent=`Budget: ${fmtN(tbpm)} h`;
   const revPs=ps.filter(p=>p.delta_sd!=null||p.delta_pm!=null);
   const kpiRevEl=document.getElementById('kpi-rev');
   if(kpiRevEl){
-    if(revPs.length>0 && !cmp){kpiRevEl.style.display='';
+    if(revPs.length>0){kpiRevEl.style.display='';
       $$('k-rev').textContent=revPs.length;
       const avgDsd=revPs.reduce((s,p)=>s+Math.abs(p.delta_sd||0),0)/revPs.length;
       const avgDpm=revPs.reduce((s,p)=>s+Math.abs(p.delta_pm||0),0)/revPs.length;
       $$('k-rev-s').textContent='Avg Δ SD: '+avgDsd.toFixed(1)+'h · PM: '+avgDpm.toFixed(1)+'h';}
     else kpiRevEl.style.display='none';}
 
-  function bkt(key, pArr){const arr=pArr||ps;const b=[0,0,0,0,0,0,0];for(const p of arr){const v=p[key];if(v==null)continue;if(v>50)b[0]++;else if(v>20)b[1]++;else if(v>=0)b[2]++;else if(v>=-50)b[3]++;else if(v>=-100)b[4]++;else if(v>=-200)b[5]++;else b[6]++}return b}
+  function bkt(key){const b=[0,0,0,0,0,0,0];for(const p of ps){const v=p[key];if(v==null)continue;if(v>50)b[0]++;else if(v>20)b[1]++;else if(v>=0)b[2]++;else if(v>=-50)b[3]++;else if(v>=-100)b[4]++;else if(v>=-200)b[5]++;else b[6]++}return b}
   const bl=['> +50%','+20–50%','0–+20%','0–−50%','−50–−100%','−100–−200%','< −200%'];
-
-  if(cmp){
-    // Side-by-side bars (thinner) — Period A colored, Period B purple
-    const sdOpts={plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},scales:{x:{stacked:false,categoryPercentage:0.75,barPercentage:0.9},y:{stacked:false}}};
-    mc('c-sd-d','bar',{labels:bl,datasets:[
-      {label:'A',data:bkt('sd_eff',ps),backgroundColor:DC,borderRadius:3},
-      {label:'B',data:bkt('sd_eff',psB),backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}
-    ]}, sdOpts);
-    mc('c-pm-d','bar',{labels:bl,datasets:[
-      {label:'A',data:bkt('pm_eff',ps),backgroundColor:DC,borderRadius:3},
-      {label:'B',data:bkt('pm_eff',psB),backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}
-    ]}, sdOpts);
-  } else {
-    mc('c-sd-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('sd_eff'),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
-    mc('c-pm-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('pm_eff'),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
-  }
+  mc('c-sd-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('sd_eff'),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
+  mc('c-pm-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('pm_eff'),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
   const effBrackets=['sd_eff','pm_eff'];
   const effRanges=[[50,Infinity],[20,50],[0,20],[-50,0],[-100,-50],[-200,-100],[-Infinity,-200]];
-  addChartClick('c-sd-d',(lbl,idx,datasetIdx)=>{
-    const src=cmp&&datasetIdx===1?psB:window._ovPs;
-    const suffix=cmp?` (Period ${datasetIdx===1?'B':'A'})`:'';
-    return{title:`SD Efficiency: ${lbl}${suffix}`,subtitle:`Projects with SD efficiency in this bracket`,projects:src.filter(p=>{const v=p.sd_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})};
-  });
-  addChartClick('c-pm-d',(lbl,idx,datasetIdx)=>{
-    const src=cmp&&datasetIdx===1?psB:window._ovPs;
-    const suffix=cmp?` (Period ${datasetIdx===1?'B':'A'})`:'';
-    return{title:`PM Efficiency: ${lbl}${suffix}`,subtitle:`Projects with PM efficiency in this bracket`,projects:src.filter(p=>{const v=p.pm_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})};
-  });
-
-  // Project Type Mix — in compare mode: two separate doughnuts side-by-side
-  const typeWrap = document.getElementById('c-type-wrap');
-  const typeCmp = document.getElementById('c-type-cmp');
-  if(cmp){
-    if(typeWrap) typeWrap.style.display='none';
-    if(typeCmp) typeCmp.style.display='';
-    $$('c-type-sub').textContent = 'Count by type · Period A vs Period B';
-
-    const typeCountsA={}; ps.forEach(p=>{if(p.projectType)typeCountsA[p.projectType]=(typeCountsA[p.projectType]||0)+1});
-    const typeCountsB={}; psB.forEach(p=>{if(p.projectType)typeCountsB[p.projectType]=(typeCountsB[p.projectType]||0)+1});
-    // Unified label set so colors line up between the two doughnuts
-    const allTypes=[...new Set([...Object.keys(typeCountsA),...Object.keys(typeCountsB)])]
-      .sort((a,b)=>((typeCountsA[b]||0)+(typeCountsB[b]||0))-((typeCountsA[a]||0)+(typeCountsB[a]||0)));
-    const dataA=allTypes.map(t=>typeCountsA[t]||0);
-    const dataB=allTypes.map(t=>typeCountsB[t]||0);
-    const totA=dataA.reduce((s,v)=>s+v,0);
-    const totB=dataB.reduce((s,v)=>s+v,0);
-
-    const mkDoughnut=(id,data,periodLabel)=>mc(id,'doughnut',{
-      labels:allTypes,
-      datasets:[{data:data,backgroundColor:PAL,borderWidth:1,borderColor:'#131929'}]
-    },{
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          backgroundColor:'#131929',borderColor:'#222f48',borderWidth:1,
-          titleColor:'#e2e8f0',bodyColor:'#dce3ef',padding:10,
-          titleFont:{family:'Inter',size:12,weight:'600'},
-          bodyFont:{family:'Inter',size:12},
-          callbacks:{
-            title:(items)=>items[0].label,
-            label:(item)=>`${periodLabel}: ${item.parsed} projects`
-          }
-        }
-      },
-      scales:{x:{display:false},y:{display:false}}
-    });
-    mkDoughnut('c-type-a',dataA,'Period A');
-    mkDoughnut('c-type-b',dataB,'Period B');
-    $$('c-type-a-count').textContent = `${totA} projects`;
-    $$('c-type-b-count').textContent = `${totB} projects`;
-
-    // Click handlers for each doughnut
-    addChartClick('c-type-a',(lbl)=>({
-      title:`Project Type: ${lbl} (Period A)`,
-      subtitle:`Projects of this type in Period A`,
-      projects:window._ovPs.filter(p=>p.projectType===lbl)
-    }));
-    addChartClick('c-type-b',(lbl)=>({
-      title:`Project Type: ${lbl} (Period B)`,
-      subtitle:`Projects of this type in Period B`,
-      projects:psB.filter(p=>p.projectType===lbl)
-    }));
-  } else {
-    if(typeWrap) typeWrap.style.display='';
-    if(typeCmp) typeCmp.style.display='none';
-    $$('c-type-sub').textContent = 'Count by type';
-    const tc={};ps.forEach(p=>{tc[p.projectType]=(tc[p.projectType]||0)+1});
-    const te=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
-    mc('c-type','doughnut',{labels:te.map(t=>t[0]),datasets:[{data:te.map(t=>t[1]),backgroundColor:PAL,borderWidth:1,borderColor:'#131929'}]},{plugins:{legend:{position:'right',labels:{color:'#dce3ef',font:{family:'Inter',size:12},boxWidth:12,padding:8}}},scales:{x:{display:false},y:{display:false}}});
-    addChartClick('c-type',(lbl)=>({title:`Project Type: ${lbl}`,subtitle:`All filtered projects of this type`,projects:window._ovPs.filter(p=>p.projectType===lbl)}));
-  }
-  // SD Eff. by Complexity — side-by-side bars in compare mode
+  addChartClick('c-sd-d',(lbl,idx)=>({title:`SD Efficiency: ${lbl}`,subtitle:`Projects with SD efficiency in this bracket`,projects:window._ovPs.filter(p=>{const v=p.sd_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})}));
+  addChartClick('c-pm-d',(lbl,idx)=>({title:`PM Efficiency: ${lbl}`,subtitle:`Projects with PM efficiency in this bracket`,projects:window._ovPs.filter(p=>{const v=p.pm_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})}));
+  const tc={};ps.forEach(p=>{tc[p.projectType]=(tc[p.projectType]||0)+1});
+  const te=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
+  mc('c-type','doughnut',{labels:te.map(t=>t[0]),datasets:[{data:te.map(t=>t[1]),backgroundColor:PAL,borderWidth:1,borderColor:'#131929'}]},{plugins:{legend:{position:'right',labels:{color:'#dce3ef',font:{family:'Inter',size:12},boxWidth:12,padding:8}}},scales:{x:{display:false},y:{display:false}}});
+  addChartClick('c-type',(lbl)=>({title:`Project Type: ${lbl}`,subtitle:`All filtered projects of this type`,projects:window._ovPs.filter(p=>p.projectType===lbl)}));
   const cm={};ps.forEach(p=>{if(!p.complexity)return;if(!cm[p.complexity])cm[p.complexity]=[];if(p.sd_eff!=null)cm[p.complexity].push(p.sd_eff)});
-  if(cmp){
-    const cmB={};psB.forEach(p=>{if(!p.complexity)return;if(!cmB[p.complexity])cmB[p.complexity]=[];if(p.sd_eff!=null)cmB[p.complexity].push(p.sd_eff)});
-    const allCk=[...new Set([...Object.keys(cm),...Object.keys(cmB)])].sort();
-    const cvA=allCk.map(k=>cm[k]?.length?med(cm[k]):null);
-    const cvB=allCk.map(k=>cmB[k]?.length?med(cmB[k]):null);
-    mc('c-cplx','bar',{
-      labels:allCk.map(k=>k.slice(0,10)),
-      datasets:[
-        {label:'A',data:cvA,backgroundColor:cvA.map(v=>v==null?'#3d5070':ecol(v)),borderRadius:3},
-        {label:'B',data:cvB,backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}
-      ]
-    },{plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},scales:{x:{categoryPercentage:0.75,barPercentage:0.9}}});
-    addChartClick('c-cplx',(lbl,idx,datasetIdx)=>{
-      const src=datasetIdx===1?psB:window._ovPs;
-      const period=datasetIdx===1?'B':'A';
-      return{title:`Complexity: ${allCk[idx]} (Period ${period})`,subtitle:`Projects of this complexity in Period ${period}`,projects:src.filter(p=>p.complexity===allCk[idx])};
-    });
-  } else {
-    const ck=Object.keys(cm).sort(),cv=ck.map(k=>med(cm[k]));
-    mc('c-cplx','bar',{labels:ck.map(k=>k.slice(0,10)),datasets:[{label:'Median SD Eff.',data:cv,backgroundColor:cv.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}}});
-    addChartClick('c-cplx',(lbl,idx)=>({title:`Complexity: ${ck[idx]}`,subtitle:`Projects with this complexity level`,projects:window._ovPs.filter(p=>p.complexity===ck[idx])}));
-  }
-
-  // Hours by Service Line — side-by-side bars in compare mode
+  const ck=Object.keys(cm).sort(),cv=ck.map(k=>med(cm[k]));
+  mc('c-cplx','bar',{labels:ck.map(k=>k.slice(0,10)),datasets:[{label:'Median SD Eff.',data:cv,backgroundColor:cv.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}}});
+  addChartClick('c-cplx',(lbl,idx)=>({title:`Complexity: ${ck[idx]}`,subtitle:`Projects with this complexity level`,projects:window._ovPs.filter(p=>p.complexity===ck[idx])}));
   const sh={};ps.forEach(p=>{if(!p.serviceLine)return;sh[p.serviceLine]=(sh[p.serviceLine]||0)+p.itime_sd+p.itime_pm});
-  if(cmp){
-    const shB={};psB.forEach(p=>{if(!p.serviceLine)return;shB[p.serviceLine]=(shB[p.serviceLine]||0)+p.itime_sd+p.itime_pm});
-    const unionSL=[...new Set([...Object.keys(sh),...Object.keys(shB)])]
-      .sort((a,b)=>((sh[b]||0)+(shB[b]||0))-((sh[a]||0)+(shB[a]||0)))
-      .slice(0,8);
-    const dataA=unionSL.map(sl=>Math.round(sh[sl]||0));
-    const dataB=unionSL.map(sl=>Math.round(shB[sl]||0));
-    mc('c-sl-ov','bar',{
-      labels:unionSL.map(e=>e.split(' - ')[0]),
-      datasets:[
-        {label:'A',data:dataA,backgroundColor:'#5b8dd9',borderRadius:3},
-        {label:'B',data:dataB,backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}
-      ]
-    },{plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},indexAxis:'y',scales:{y:{categoryPercentage:0.75,barPercentage:0.9}}});
-    addChartClick('c-sl-ov',(lbl,idx,datasetIdx)=>{
-      const src=datasetIdx===1?psB:window._ovPs;
-      const period=datasetIdx===1?'B':'A';
-      return{title:`Service Line: ${unionSL[idx]} (Period ${period})`,subtitle:`Projects in this service line (Period ${period})`,projects:src.filter(p=>p.serviceLine===unionSL[idx])};
-    });
-  } else {
-    const se=Object.entries(sh).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    mc('c-sl-ov','bar',{labels:se.map(e=>e[0].split(' - ')[0]),datasets:[{label:'Total Hours',data:se.map(e=>Math.round(e[1])),backgroundColor:'#5b8dd9',borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
-    addChartClick('c-sl-ov',(lbl,idx)=>({title:`Service Line: ${se[idx][0]}`,subtitle:`Projects in this service line`,projects:window._ovPs.filter(p=>p.serviceLine===se[idx][0])}));
-  }
+  const se=Object.entries(sh).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  mc('c-sl-ov','bar',{labels:se.map(e=>e[0].split(' - ')[0]),datasets:[{label:'Total Hours',data:se.map(e=>Math.round(e[1])),backgroundColor:'#5b8dd9',borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
+  addChartClick('c-sl-ov',(lbl,idx)=>({title:`Service Line: ${se[idx][0]}`,subtitle:`Projects in this service line`,projects:window._ovPs.filter(p=>p.serviceLine===se[idx][0])}));
 
-  // Hours breakdown tables — use shared helper
-  applyHrsBreakdownTable('t-hrs-sl','serviceLine',ps,psB,cmp);
-  $$('hrs-bdg').textContent=cmp?`A: ${fmtN(A.totItimeSD+A.totItimePM)}h · B: ${fmtN(B.totItimeSD+B.totItimePM)}h`:`${fmtN(A.totItimeSD+A.totItimePM)} h total`;
-  applyHrsBreakdownTable('t-hrs-pt','projectType',ps,psB,cmp);
+  // Hours breakdown tables
+  function hrsRow(label,p2){
+    const isd=p2.reduce((s,p)=>s+p.itime_sd,0),bsd=p2.reduce((s,p)=>s+p.budget_sd,0);
+    const ipm=p2.reduce((s,p)=>s+p.itime_pm,0),bpm=p2.reduce((s,p)=>s+p.budget_pm,0);
+    const dsd=bsd>0?isd-bsd:null, dpm=bpm>0?ipm-bpm:null;
+    const asd2=bsd>0?(bsd-isd)/bsd*100:null, apm2=bpm>0?(bpm-ipm)/bpm*100:null;
+    const dCls=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
+    const dFmt=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
+    return`<tr>
+      <td style="font-weight:500">${label}</td>
+      <td>${p2.length}</td>
+      <td>${fmtN(isd)}</td><td>${fmtN(bsd)}</td>
+      <td ${dCls(dsd)}>${dFmt(dsd)}</td>
+      <td>${fmtN(ipm)}</td><td>${fmtN(bpm)}</td>
+      <td ${dCls(dpm)}>${dFmt(dpm)}</td>
+      <td style="font-weight:600">${fmtN(isd+ipm)}</td>
+      <td style="font-weight:600">${fmtN(bsd+bpm)}</td>
+      <td><span class="eb ${ecls(asd2)}">${fmt(asd2)}</span></td>
+      <td><span class="eb ${ecls(apm2)}">${fmt(apm2)}</span></td>
+    </tr>`;
+  }
+  const slm=grp(ps,'serviceLine');
+  const slk=Object.keys(slm).filter(Boolean).sort((a,b)=>slm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-slm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
+  $$('t-hrs-sl').innerHTML=slk.map(k=>hrsRow(k,slm[k])).join('')+hrsRow('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
+  $$('hrs-bdg').textContent=`${fmtN(totsd+totpm)} h total`;
+  const ptm=grp(ps,'projectType');
+  const ptk=Object.keys(ptm).filter(Boolean).sort((a,b)=>ptm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-ptm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
+  $$('t-hrs-pt').innerHTML=ptk.map(k=>hrsRow(k,ptm[k])).join('')+hrsRow('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
 }
 
 function renderTeams(ps){
-  const cmp = _compareMode && (_periodB.size>0 || _periodBYears.size>0);
-  const psB = cmp ? filterPB() : null;
-
-  // ── SW/PM Team Efficiency charts ──
-  // Helper: build chart in normal mode (single dataset) or compare mode (A + B side-by-side)
-  function tChart(cid, gk, et){
-    const m = grp(ps, gk);
-    const ks = Object.keys(m).filter(Boolean).sort((a,b)=>(agg(m[b],et)??-9999)-(agg(m[a],et)??-9999));
-    const vs = ks.map(k=>agg(m[k],et));
-    const labels = ks.map(k=>k.replace('EU SW ','').replace('IIS PM ','').replace('EU PM ',''));
-    if(!cmp){
-      mc(cid,'bar',{labels,datasets:[{label:`Agg ${et.toUpperCase()} Eff. %`,data:vs,backgroundColor:vs.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
-      return {m, ks, mB:null};
-    }
-    // Compare mode: union keys sorted by max(|A|,|B|) aggregate
-    const mB = grp(psB, gk);
-    const unionKs = [...new Set([...Object.keys(m),...Object.keys(mB)])].filter(Boolean)
-      .sort((a,b)=>{
-        const va=Math.max(Math.abs(agg(m[a]||[],et)??-9999),Math.abs(agg(mB[a]||[],et)??-9999));
-        const vb=Math.max(Math.abs(agg(m[b]||[],et)??-9999),Math.abs(agg(mB[b]||[],et)??-9999));
-        return (agg(m[b]||[],et)??-9999) - (agg(m[a]||[],et)??-9999);
-      });
-    const vsA = unionKs.map(k=>agg(m[k]||[],et));
-    const vsB = unionKs.map(k=>agg(mB[k]||[],et));
-    const unionLabels = unionKs.map(k=>k.replace('EU SW ','').replace('IIS PM ','').replace('EU PM ',''));
-    mc(cid,'bar',{
-      labels:unionLabels,
-      datasets:[
-        {label:'A',data:vsA,backgroundColor:vsA.map(v=>v==null?'#3d5070':ecol(v)),borderRadius:3},
-        {label:'B',data:vsB,backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}
-      ]
-    },{plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},indexAxis:'y',scales:{y:{categoryPercentage:0.75,barPercentage:0.9}}});
-    return {m, ks:unionKs, mB};
+  function tChart(cid,gk,et){
+    const m=grp(ps,gk),ks=Object.keys(m).filter(Boolean).sort((a,b)=>(agg(m[b],et)??-9999)-(agg(m[a],et)??-9999));
+    const vs=ks.map(k=>agg(m[k],et));
+    mc(cid,'bar',{labels:ks.map(k=>k.replace('EU SW ','').replace('IIS PM ','').replace('EU PM ','')),datasets:[{label:`Agg ${et.toUpperCase()} Eff. %`,data:vs,backgroundColor:vs.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
+    return{m,ks};
   }
-
-  const {m:sm, ks:sk, mB:smB} = tChart('c-sw','swTeam','sd');
-  const {m:pm, ks:pk, mB:pmB} = tChart('c-pm','pmTeam','pm');
-  $$('sw-bdg').textContent = cmp?`A:${Object.keys(sm).filter(Boolean).length} · B:${Object.keys(smB||{}).filter(Boolean).length} teams`:`${sk.length} teams`;
-  $$('pm-bdg').textContent = cmp?`A:${Object.keys(pm).filter(Boolean).length} · B:${Object.keys(pmB||{}).filter(Boolean).length} teams`:`${pk.length} teams`;
-
-  // Chart click handlers
-  if(cmp){
-    addChartClick('c-sw',(lbl,idx,datasetIdx)=>{
-      const fullKey=sk[idx]||'';
-      const src=datasetIdx===1?(smB[fullKey]||[]):(sm[fullKey]||[]);
-      const period=datasetIdx===1?'B':'A';
-      return{title:`SW Team: ${fullKey} (Period ${period})`,subtitle:`All projects of this SW team in Period ${period}`,projects:src};
-    });
-    addChartClick('c-pm',(lbl,idx,datasetIdx)=>{
-      const fullKey=pk[idx]||'';
-      const src=datasetIdx===1?(pmB[fullKey]||[]):(pm[fullKey]||[]);
-      const period=datasetIdx===1?'B':'A';
-      return{title:`PM Team: ${fullKey} (Period ${period})`,subtitle:`All projects of this PM team in Period ${period}`,projects:src};
-    });
-  } else {
-    addChartClick('c-sw',(lbl,idx)=>{const fullKey=sk[idx]||'';return{title:`SW Team: ${fullKey}`,subtitle:`All projects of this SW team`,projects:sm[fullKey]||[]};});
-    addChartClick('c-pm',(lbl,idx)=>{const fullKey=pk[idx]||'';return{title:`PM Team: ${fullKey}`,subtitle:`All projects of this PM team`,projects:pm[fullKey]||[]};});
-  }
-
-  // ── SW/PM Team Detail tables ──
-  function tTblRowSingle(k,p2,et){
+  const{m:sm,ks:sk}=tChart('c-sw','swTeam','sd');
+  const{m:pm,ks:pk}=tChart('c-pm','pmTeam','pm');
+  $$('sw-bdg').textContent=`${sk.length} teams`;$$('pm-bdg').textContent=`${pk.length} teams`;
+  // Chart click handlers — SW team bar → projects of that team
+  addChartClick('c-sw',(lbl,idx)=>{
+    const fullKey=sk[idx]||'';
+    return{title:`SW Team: ${fullKey}`,subtitle:`All projects of this SW team`,projects:sm[fullKey]||[]};
+  });
+  addChartClick('c-pm',(lbl,idx)=>{
+    const fullKey=pk[idx]||'';
+    return{title:`PM Team: ${fullKey}`,subtitle:`All projects of this PM team`,projects:pm[fullKey]||[]};
+  });
+  function tTbl(tid,m,ks,et){
     const bk=et==='sd'?'budget_sd':'budget_pm',ik=et==='sd'?'itime_sd':'itime_pm',ek=et==='sd'?'sd_eff':'pm_eff';
-    const bd=p2.reduce((s,p)=>s+p[bk],0),it=p2.reduce((s,p)=>s+p[ik],0);
-    const ag=bd>0?(bd-it)/bd*100:null,vs=p2.map(p=>p[ek]).filter(v=>v!=null),md=vs.length?med(vs):null;
-    const pct=Math.min(100,Math.max(0,(ag??0)+100))/200*100;
-    return`<tr>
-      <td>${k}</td><td>${p2.length}</td><td><span class="eb ${ecls(md)}">${fmt(md)}</span></td>
-      <td><div class="bc"><div class="bb"><div class="bf" style="width:${pct}%;background:${ecol(ag)}"></div></div><span class="eb ${ecls(ag)}">${fmt(ag)}</span></div></td>
-      <td>${fmtN(it)}</td><td>${fmtN(bd)}</td></tr>`;
+    $$(tid).innerHTML=ks.map(k=>{
+      const p2=m[k],bd=p2.reduce((s,p)=>s+p[bk],0),it=p2.reduce((s,p)=>s+p[ik],0);
+      const ag=bd>0?(bd-it)/bd*100:null,vs=p2.map(p=>p[ek]).filter(v=>v!=null),md=vs.length?med(vs):null;
+      const pct=Math.min(100,Math.max(0,(ag??0)+100))/200*100;
+      return`<tr>
+        <td>${k}</td><td>${p2.length}</td><td><span class="eb ${ecls(md)}">${fmt(md)}</span></td>
+        <td><div class="bc"><div class="bb"><div class="bf" style="width:${pct}%;background:${ecol(ag)}"></div></div><span class="eb ${ecls(ag)}">${fmt(ag)}</span></div></td>
+        <td>${fmtN(it)}</td><td>${fmtN(bd)}</td></tr>`;
+    }).join('');
   }
-  function tTblRowPair(k,pA,pB,et){
-    const bk=et==='sd'?'budget_sd':'budget_pm',ik=et==='sd'?'itime_sd':'itime_pm',ek=et==='sd'?'sd_eff':'pm_eff';
-    const calc=(p2)=>{
-      const bd=p2.reduce((s,p)=>s+p[bk],0),it=p2.reduce((s,p)=>s+p[ik],0);
-      const ag=bd>0?(bd-it)/bd*100:null;
-      const vs=p2.map(p=>p[ek]).filter(v=>v!=null), md=vs.length?med(vs):null;
-      return{bd,it,ag,md,cnt:p2.length};
-    };
-    const a=calc(pA), b=calc(pB);
-    const pctA=Math.min(100,Math.max(0,(a.ag??0)+100))/200*100;
-    const pctB=Math.min(100,Math.max(0,(b.ag??0)+100))/200*100;
-    const aRow=`<tr style="border-bottom:1px dashed rgba(91,141,217,.15)">
-      <td rowspan="2" style="font-weight:500">${k}</td>
-      <td><span style="background:#1e2d45;color:#e2e8f0;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">A</span>${a.cnt}</td>
-      <td><span class="eb ${ecls(a.md)}">${fmt(a.md)}</span></td>
-      <td><div class="bc"><div class="bb"><div class="bf" style="width:${pctA}%;background:${ecol(a.ag)}"></div></div><span class="eb ${ecls(a.ag)}">${fmt(a.ag)}</span></div></td>
-      <td>${fmtN(a.it)}</td><td>${fmtN(a.bd)}</td>
-    </tr>`;
-    const bRow=`<tr style="background:rgba(168,85,247,.04);border-bottom:1px solid var(--border)">
-      <td><span style="background:#4c1d95;color:#e9d5ff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">B</span>${b.cnt}</td>
-      <td><span class="eb ${ecls(b.md)}">${fmt(b.md)}</span></td>
-      <td><div class="bc"><div class="bb"><div class="bf" style="width:${pctB}%;background:${ecol(b.ag)}"></div></div><span class="eb ${ecls(b.ag)}">${fmt(b.ag)}</span></div></td>
-      <td style="color:#c4b5fd">${fmtN(b.it)}</td><td style="color:#c4b5fd">${fmtN(b.bd)}</td>
-    </tr>`;
-    return aRow+bRow;
-  }
-  function tTbl(tid, gA, gB, et){
-    const keys = cmp
-      ? [...new Set([...Object.keys(gA),...Object.keys(gB||{})])].filter(Boolean).sort((a,b)=>{
-          const aggA=agg(gA[b]||[],et)??-9999, aggB=agg(gA[a]||[],et)??-9999;
-          return aggA - aggB;
-        })
-      : Object.keys(gA).filter(Boolean).sort((a,b)=>(agg(gA[b],et)??-9999)-(agg(gA[a],et)??-9999));
-    if(cmp){
-      $$(tid).innerHTML = keys.map(k=>tTblRowPair(k,gA[k]||[],(gB||{})[k]||[],et)).join('');
-    } else {
-      $$(tid).innerHTML = keys.map(k=>tTblRowSingle(k,gA[k],et)).join('');
-    }
-  }
-  tTbl('t-sw',sm,smB,'sd');
-  tTbl('t-pm',pm,pmB,'pm');
+  tTbl('t-sw',sm,sk,'sd');tTbl('t-pm',pm,pk,'pm');
 
-  // ── Hours Breakdown tables by SW/PM team ──
-  applyHrsBreakdownTable('t-hrs-swt','swTeam',ps,psB,cmp);
-  applyHrsBreakdownTable('t-hrs-pmt','pmTeam',ps,psB,cmp);
+  // Hours breakdown by SW team
+  function hrsRow2(label,p2){
+    const isd=p2.reduce((s,p)=>s+p.itime_sd,0),bsd=p2.reduce((s,p)=>s+p.budget_sd,0);
+    const ipm=p2.reduce((s,p)=>s+p.itime_pm,0),bpm=p2.reduce((s,p)=>s+p.budget_pm,0);
+    const dsd=bsd>0?isd-bsd:null,dpm=bpm>0?ipm-bpm:null;
+    const asd2=bsd>0?(bsd-isd)/bsd*100:null,apm2=bpm>0?(bpm-ipm)/bpm*100:null;
+    const dC=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
+    const dF=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
+    return`<tr><td style="font-weight:500">${label}</td><td>${p2.length}</td>
+      <td>${fmtN(isd)}</td><td>${fmtN(bsd)}</td><td ${dC(dsd)}>${dF(dsd)}</td>
+      <td>${fmtN(ipm)}</td><td>${fmtN(bpm)}</td><td ${dC(dpm)}>${dF(dpm)}</td>
+      <td style="font-weight:600">${fmtN(isd+ipm)}</td><td style="font-weight:600">${fmtN(bsd+bpm)}</td>
+      <td><span class="eb ${ecls(asd2)}">${fmt(asd2)}</span></td>
+      <td><span class="eb ${ecls(apm2)}">${fmt(apm2)}</span></td></tr>`;
+  }
+  const swtk=Object.keys(sm).filter(Boolean).sort((a,b)=>sm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-sm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
+  $$('t-hrs-swt').innerHTML=swtk.map(k=>hrsRow2(k,sm[k])).join('')+hrsRow2('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
+  const pmtk=Object.keys(pm).filter(Boolean).sort((a,b)=>pm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-pm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
+  $$('t-hrs-pmt').innerHTML=pmtk.map(k=>hrsRow2(k,pm[k])).join('')+hrsRow2('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
 }
 
 function renderSL(ps){
@@ -3313,22 +2631,41 @@ function exportDrawerCSV(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 
 // ── CHART CLICK HANDLER ────────────────────────────
+// Track registered click handlers to avoid accumulation across re-renders
+const _chartClickHandlers = {};
 function addChartClick(chartId, getProjects){
   const canvas=document.getElementById(chartId);
   if(!canvas)return;
   canvas.style.cursor='pointer';
-  canvas.addEventListener('click',function(e){
+  if(_chartClickHandlers[chartId]){
+    canvas.removeEventListener('click',_chartClickHandlers[chartId]);
+  }
+  const handler = function(e){
     const chart=CH[chartId];if(!chart)return;
-    const pts=chart.getElementsAtEventForMode(e,'nearest',{intersect:false},false);
-    if(!pts.length)return;
-    const idx=pts[0].index;
-    const datasetIdx=pts[0].datasetIndex||0;
+    const isHorizontal = chart.options?.indexAxis === 'y';
+    let idx, datasetIdx=0;
+    if(isHorizontal){
+      const rect=canvas.getBoundingClientRect();
+      const yPx=e.clientY - rect.top;
+      const yScale=chart.scales.y;
+      if(!yScale)return;
+      const raw=yScale.getValueForPixel(yPx);
+      idx=Math.round(raw);
+      if(idx<0||idx>=chart.data.labels.length)return;
+    } else {
+      const pts=chart.getElementsAtEventForMode(e,'nearest',{intersect:false},false);
+      if(!pts.length)return;
+      idx=pts[0].index;
+      datasetIdx=pts[0].datasetIndex||0;
+    }
     const label=chart.data.labels[idx];
     const result=getProjects(label,idx,datasetIdx);
     if(result&&result.projects&&result.projects.length>0){
       openDrawer(result.title, result.subtitle, result.projects, result.personType||null);
     }
-  });
+  };
+  _chartClickHandlers[chartId]=handler;
+  canvas.addEventListener('click',handler);
 }
 
 // SORTABLE TABLES
@@ -3336,94 +2673,31 @@ const _sortState={};
 function sortHrsTable(tblId,colIdx,type,thEl){
   const tbody=document.querySelector('#'+tblId+' tbody');
   if(!tbody)return;
-  const allRows=Array.from(tbody.querySelectorAll('tr'));
-
-  // Detect compare mode by presence of rowspan on first cell (A-row of a pair)
-  const isPaired=allRows.some(r=>r.cells[0]&&r.cells[0].hasAttribute('rowspan'));
-
+  const rows=Array.from(tbody.querySelectorAll('tr:not([style*="border-top:2px"])'));
+  const totalRow=tbody.querySelector('tr[style*="border-top:2px"]');
   const key=tblId+'-'+colIdx;
   const prev=_sortState[key]||'none';
   const dir=prev==='asc'?'desc':'asc';
   _sortState[key]=dir;
+  // Reset all th icons in this table
   document.querySelectorAll('#'+tblId+' .sortable-th').forEach(th=>{th.classList.remove('asc','desc')});
   thEl.classList.add(dir);
-
-  function parseVal(txt){
+  function val(row){
+    const td=row.cells[colIdx];if(!td)return 0;
+    const txt=td.textContent.trim();
     if(type==='str')return txt.toLowerCase();
     if(type==='num'){const n=parseFloat(txt.replace(/[^0-9.-]/g,''));return isNaN(n)?-Infinity:n}
     if(type==='delta'){const n=parseFloat(txt.replace(/[^0-9.+-]/g,'').replace(/\+/,''));return isNaN(n)?-Infinity:n}
     if(type==='eff'){const n=parseFloat(txt.replace('%','').replace(/[^0-9.+-]/g,''));return isNaN(n)?-Infinity:n}
     return txt;
   }
-
-  if(!isPaired){
-    // Single-row mode (original behavior)
-    const totalRow=tbody.querySelector('tr[style*="border-top:2px"]');
-    const rows=allRows.filter(r=>r!==totalRow);
-    function val(row){
-      const td=row.cells[colIdx];if(!td)return type==='str'?'':-Infinity;
-      return parseVal(td.textContent.trim());
-    }
-    rows.sort((a,b)=>{
-      const av=val(a),bv=val(b);
-      if(type==='str')return dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
-      return dir==='asc'?av-bv:bv-av;
-    });
-    rows.forEach(r=>tbody.appendChild(r));
-    if(totalRow)tbody.appendChild(totalRow);
-    return;
-  }
-
-  // Paired mode: chunk into [aRow, bRow] pairs
-  // First col has rowspan=2 on A-row → that cell represents the label for the PAIR
-  // B-row's cells are offset by -1 (no label cell), so we need to read the right column
-  const pairs=[];
-  let totalPair=null;
-  for(let i=0;i<allRows.length;i+=2){
-    const aRow=allRows[i], bRow=allRows[i+1];
-    if(!bRow) break;
-    const chunk={aRow,bRow};
-    // TOTAL detection: A-row of TOTAL pair has the accent border-top
-    if(aRow.getAttribute('style')&&aRow.getAttribute('style').includes('border-top:2px')) totalPair=chunk;
-    else pairs.push(chunk);
-  }
-
-  // Get the value for sorting.
-  // In a paired row:
-  //  - A-row has cells: [label(rowspan=2), col1, col2, col3, ...] → col N is at cells[N]
-  //  - B-row has cells: [col1, col2, col3, ...] → col N is at cells[N-1]
-  // For label column (colIdx=0), always read from A-row.cells[0].
-  // For data columns (colIdx>=1), read from A-row.cells[colIdx] or B-row.cells[colIdx-1].
-  // We sort by MAX of A and B values (so clicking sorts by whichever row is more extreme).
-  function pairVal(pair){
-    if(colIdx===0){
-      const td=pair.aRow.cells[0];
-      return parseVal(td?td.textContent.trim():'');
-    }
-    const aTd=pair.aRow.cells[colIdx];
-    const bTd=pair.bRow.cells[colIdx-1]; // B-row is offset by -1
-    const aVal=aTd?parseVal(aTd.textContent.trim()):(type==='str'?'':-Infinity);
-    const bVal=bTd?parseVal(bTd.textContent.trim()):(type==='str'?'':-Infinity);
-    if(type==='str') return (aVal||'').toString();
-    // For numeric sorts, use max absolute value (more extreme of A/B)
-    return Math.max(aVal,bVal);
-  }
-
-  pairs.sort((a,b)=>{
-    const av=pairVal(a),bv=pairVal(b);
+  rows.sort((a,b)=>{
+    const av=val(a),bv=val(b);
     if(type==='str')return dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
     return dir==='asc'?av-bv:bv-av;
   });
-
-  // Re-append in sorted order (pair = A then B, keeps them together)
-  pairs.forEach(pair=>{
-    tbody.appendChild(pair.aRow);
-    tbody.appendChild(pair.bRow);
-  });
-  if(totalPair){
-    tbody.appendChild(totalPair.aRow);
-    tbody.appendChild(totalPair.bRow);
-  }
+  rows.forEach(r=>tbody.appendChild(r));
+  if(totalRow)tbody.appendChild(totalRow);
 }
 
 
@@ -3458,13 +2732,6 @@ window.drawerSearch = drawerSearch;
 window.exportDrawerCSV = exportDrawerCSV;
 window.msSel = msSel;
 window.msSearch = msSearch;
-window.toggleCompare = toggleCompare;
-window.msToggleMonthB = msToggleMonthB;
-window.msSelMonthB = msSelMonthB;
-window.msSearchMonthB = msSearchMonthB;
-window.msToggleYearB = msToggleYearB;
-window.msSelYearB = msSelYearB;
-window.msSearchYearB = msSearchYearB;
 
 // ─────────────────────────────────────────────────────────────
 // MODULE API — called by shell
@@ -5203,10 +4470,6 @@ document.addEventListener('DOMContentLoaded', initMgmtDrawerDrag);
 // ─────────────────────────────────────────────────────────────
 window.closeMgmtDrawer = closeMgmtDrawer;
 window.filterMSList = filterMSList;
-window.getZThresh = getZThresh;
-window.getMgmtGhostRows  = () => _kpiGhostRows;
-window.getMgmtSkaterRows = () => _kpiSkaterRows;
-window.getMgmtFlagRows   = () => _kpiFlagRows;
 window.maxMgmtDrawer = maxMgmtDrawer;
 window.mgmtDSort = mgmtDSort;
 window.mgmtDrawerSearch = mgmtDrawerSearch;
