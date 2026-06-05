@@ -507,7 +507,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .eff-scope .sec-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:12px}
 .eff-scope .info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);color:var(--dim);font-size:10px;font-weight:700;cursor:pointer;background:var(--surface2);flex-shrink:0;position:relative;transition:border-color .15s,color .15s;user-select:none;margin-left:8px;vertical-align:middle}
 .eff-scope .info-btn:hover{border-color:var(--accent);color:var(--accent)}
-.eff-scope .info-tooltip{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1b2236;border:1px solid var(--border);border-radius:8px;padding:10px 13px;min-width:260px;max-width:340px;font-size:12px;font-weight:400;color:var(--dim);line-height:1.6;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.6);pointer-events:none;text-align:left;white-space:normal}
+.eff-scope .info-tooltip{display:none;position:fixed;background:#1b2236;border:1px solid var(--border);border-radius:8px;padding:10px 13px;min-width:260px;max-width:340px;font-size:12px;font-weight:400;color:var(--dim);line-height:1.6;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.6);pointer-events:none;text-align:left;white-space:normal;transform:none}
 .eff-scope .info-btn:hover .info-tooltip{display:block}
 .eff-scope .sortable-th{cursor:pointer;user-select:none;white-space:nowrap}
 .eff-scope .sortable-th:hover{color:var(--accent);background:rgba(56,189,248,.06)}
@@ -834,8 +834,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 <div id="dashboard">
   <div class="filters-bar">
     <span class="f-label">Filter</span>
+    <!-- PERIOD A -->
+    <span id="cmp-label-a" style="display:none;color:#e2e8f0;font-size:11px;font-weight:700;letter-spacing:.5px;margin-right:2px">PERIOD A:</span>
     <div class="ms-wrap" id="eff-ms-year"></div>
     <div class="ms-wrap" id="ms-yr"></div>
+    <button id="cmp-toggle" onclick="toggleCompare()" style="background:#0d1526;border:1px solid #222f48;border-radius:6px;padding:5px 10px;color:#7d93b5;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;outline:none;display:flex;align-items:center;gap:6px;transition:all .15s" onmouseover="if(!this.classList.contains('active'))this.style.borderColor='#5b8dd9'" onmouseout="if(!this.classList.contains('active'))this.style.borderColor='#222f48'"><span>⇄</span><span>Compare</span></button>
+    <!-- Line break between Period A and Period B (compare mode only) -->
+    <div id="cmp-break-1" style="display:none;flex-basis:100%;height:0"></div>
+    <!-- PERIOD B (hidden until compare active) -->
+    <span id="cmp-label-b" style="display:none;color:#a78bfa;font-size:11px;font-weight:700;letter-spacing:.5px;margin-right:2px;margin-left:46px">PERIOD B:</span>
+    <div class="ms-wrap" id="eff-ms-year-b" style="display:none"></div>
+    <div class="ms-wrap" id="ms-yr-b" style="display:none"></div>
+    <!-- Line break between Period B and shared filters (compare mode only) -->
+    <div id="cmp-break-2" style="display:none;flex-basis:100%;height:0"></div>
+    <!-- SHARED FILTERS -->
     <div class="f-div"></div>
     <div class="ms-wrap" id="ms-sw"></div>
     <div class="ms-wrap" id="ms-pm"></div>
@@ -875,6 +887,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
         <div class="kpi" style="--kc:var(--a2)"><div class="kpi-lbl">Aggregate PM Eff.</div><div class="kpi-val" id="k-pm-agg">—</div><div class="kpi-sub">Total Budget vs Actual</div></div>
         <div class="kpi" style="--kc:#818cf8"><div class="kpi-lbl">SD Hours Logged</div><div class="kpi-val" id="k-sd-h">—</div><div class="kpi-sub" id="k-sd-b"></div></div>
         <div class="kpi" style="--kc:#f472b6"><div class="kpi-lbl">PM Hours Logged</div><div class="kpi-val" id="k-pm-h">—</div><div class="kpi-sub" id="k-pm-b"></div></div>
+        <div class="kpi" style="--kc:#34d399"><div class="kpi-lbl">EFLD <span class="info-btn">i<span class="info-tooltip">Error Free Link Delivery — percentage of projects completed without errors. Formula: error-free projects / total projects × 100. A project is error-free when its EFLD value = 0. Responds to all active filters (team, service line, period, etc.).</span></span></div><div class="kpi-val" id="k-efld">—</div><div class="kpi-sub" id="k-efld-s"></div></div>
         <div class="kpi" id="kpi-rev" style="--kc:#c0784a;display:none"><div class="kpi-lbl">Revised Forecasts</div><div class="kpi-val" id="k-rev">—</div><div class="kpi-sub" id="k-rev-s"></div></div>
       </div>
       <div class="cg2">
@@ -882,7 +895,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
         <div class="cc"><div class="cc-title">PM Efficiency Distribution</div><div class="cc-sub">Projects by efficiency bracket</div><div class="cw" style="height:220px"><canvas id="c-pm-d"></canvas></div></div>
       </div>
       <div class="cg3">
-        <div class="cc"><div class="cc-title">Project Type Mix</div><div class="cc-sub">Count by type</div><div class="cw" style="height:200px"><canvas id="c-type"></canvas></div></div>
+        <div class="cc">
+          <div class="cc-title">Project Type Mix</div>
+          <div class="cc-sub" id="c-type-sub">Count by type</div>
+          <div id="c-type-wrap" class="cw" style="height:200px"><canvas id="c-type"></canvas></div>
+          <div id="c-type-cmp" style="display:none;height:200px">
+            <div style="display:flex;gap:8px;height:100%;align-items:center">
+              <div style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="font-size:10px;color:#e2e8f0;font-weight:700;letter-spacing:.5px;margin-bottom:2px">● PERIOD A</div>
+                <div style="flex:1;width:100%;min-height:0;position:relative"><canvas id="c-type-a"></canvas></div>
+                <div id="c-type-a-count" style="font-size:10px;color:#7d93b5;margin-top:2px">—</div>
+              </div>
+              <div style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="font-size:10px;color:#a78bfa;font-weight:700;letter-spacing:.5px;margin-bottom:2px">● PERIOD B</div>
+                <div style="flex:1;width:100%;min-height:0;position:relative"><canvas id="c-type-b"></canvas></div>
+                <div id="c-type-b-count" style="font-size:10px;color:#7d93b5;margin-top:2px">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="cc"><div class="cc-title">SD Eff. by Complexity</div><div class="cc-sub">Median per level</div><div class="cw" style="height:200px"><canvas id="c-cplx"></canvas></div></div>
         <div class="cc"><div class="cc-title">Hours by Service Line</div><div class="cc-sub">Total iTime SD + PM</div><div class="cw" style="height:200px"><canvas id="c-sl-ov"></canvas></div></div>
       </div>
@@ -896,16 +927,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
           <thead><tr>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',0,'str',this)">Service Line<span class="sort-icon"></span></th>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',1,'num',this)">Projects<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',2,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',3,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',4,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',5,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',6,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',7,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',8,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',9,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',10,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',11,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',2,'eff',this)">EFLD %<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',3,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',4,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',5,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',6,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',7,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',8,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',9,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',10,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',11,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-sl',12,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
           </tr></thead>
           <tbody id="t-hrs-sl"></tbody>
         </table></div>
@@ -917,16 +949,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
           <thead><tr>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',0,'str',this)">Project Type<span class="sort-icon"></span></th>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',1,'num',this)">Projects<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',2,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',3,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',4,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',5,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',6,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',7,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',8,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',9,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',10,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',11,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',2,'eff',this)">EFLD %<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',3,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',4,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',5,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',6,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',7,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',8,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',9,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',10,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',11,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pt',12,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
           </tr></thead>
           <tbody id="t-hrs-pt"></tbody>
         </table></div>
@@ -940,9 +973,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
         <div class="cc"><div class="cc-title">PM Efficiency by PM Team</div><div class="cc-sub">Aggregate % — higher is better</div><div class="cw" style="height:290px"><canvas id="c-pm"></canvas></div></div>
       </div>
       <div class="tc"><div class="th"><span class="tt">SW Team Detail<span class="info-btn">i<span class="info-tooltip">SD/QA efficiency per SW team. Median SD Eff. = 50th percentile of individual project efficiencies. Aggregate SD Eff. = (Total Budget − Total iTime) / Total Budget × 100%. Higher % = more efficient.</span></span></span><span class="tbdg" id="sw-bdg"></span></div>
-        <div class="tw"><table><thead><tr><th>SW Team</th><th>Projects</th><th>Median SD Eff.</th><th>Aggregate SD Eff.</th><th>iTime SD (h)</th><th>Budget SD (h)</th></tr></thead><tbody id="t-sw"></tbody></table></div></div>
+        <div class="tw"><table><thead><tr><th>SW Team</th><th>Projects</th><th>EFLD %</th><th>Median SD Eff.</th><th>Aggregate SD Eff.</th><th>iTime SD (h)</th><th>Budget SD (h)</th></tr></thead><tbody id="t-sw"></tbody></table></div></div>
       <div class="tc"><div class="th"><span class="tt">PM Team Detail<span class="info-btn">i<span class="info-tooltip">PM efficiency per PM team. Aggregate PM Eff. = (Total PM Budget − Total PM iTime) / Total PM Budget × 100%. Projects without PM budget (marked "-" in Zoho) are excluded from efficiency calculations.</span></span></span><span class="tbdg" id="pm-bdg"></span></div>
-        <div class="tw"><table><thead><tr><th>PM Team</th><th>Projects</th><th>Median PM Eff.</th><th>Aggregate PM Eff.</th><th>iTime PM (h)</th><th>Budget PM (h)</th></tr></thead><tbody id="t-pm"></tbody></table></div></div>
+        <div class="tw"><table><thead><tr><th>PM Team</th><th>Projects</th><th>EFLD %</th><th>Median PM Eff.</th><th>Aggregate PM Eff.</th><th>iTime PM (h)</th><th>Budget PM (h)</th></tr></thead><tbody id="t-pm"></tbody></table></div></div>
 
       <div class="tc">
         <div class="th"><span class="tt">Hours Breakdown — by SW Team<span class="info-btn">i<span class="info-tooltip">Total iTime and budget hours per SW team for SD/QA roles. SD Δ = iTime SD − Budget SD (red = over budget). Includes TOTAL row.</span></span></span></div>
@@ -950,16 +983,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
           <thead><tr>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',0,'str',this)">SW Team<span class="sort-icon"></span></th>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',1,'num',this)">Projects<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',2,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',3,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',4,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',5,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',6,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',7,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',8,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',9,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',10,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',11,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',2,'eff',this)">EFLD %<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',3,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',4,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',5,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',6,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',7,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',8,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',9,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',10,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',11,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-swt',12,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
           </tr></thead>
           <tbody id="t-hrs-swt"></tbody>
         </table></div>
@@ -971,16 +1005,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
           <thead><tr>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',0,'str',this)">PM Team<span class="sort-icon"></span></th>
             <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',1,'num',this)">Projects<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',2,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',3,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',4,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',5,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',6,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',7,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',8,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',9,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',10,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
-            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',11,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',2,'eff',this)">EFLD %<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',3,'num',this)">iTime SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',4,'num',this)">Budget SD (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',5,'delta',this)">SD Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',6,'num',this)">iTime PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',7,'num',this)">Budget PM (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',8,'delta',this)">PM Δ (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',9,'num',this)">Total iTime (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',10,'num',this)">Total Budget (h)<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',11,'eff',this)">Agg. SD Eff.<span class="sort-icon"></span></th>
+            <th class="sortable-th" onclick="sortHrsTable('tbl-hrs-pmt',12,'eff',this)">Agg. PM Eff.<span class="sort-icon"></span></th>
           </tr></thead>
           <tbody id="t-hrs-pmt"></tbody>
         </table></div>
@@ -1205,6 +1240,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
       <div class="ss-lbl">⇅ Seniority Inversions <span class="info-btn" onclick="event.stopPropagation();showInfo(this,'Seniority Inversions','Cases where a lower-level person significantly outperforms a higher-level colleague from the same team and role group. A gap of 20+ efficiency percentage points is required to flag a pair.','Compared within: same team × same role group · min level gap: 2 steps')">i</span></div>
       <div class="ss-val" id="s-inv">—</div>
       <div class="ss-sub">junior outperforms senior</div>
+    </div>
+    <div class="ss-card c-green" style="cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--green)'" onmouseleave="this.style.borderColor=''" onclick="if(window.getMgmtHighRevRows&&getMgmtHighRevRows().length>0)openMgmtDrawer('🔁 High Revision Pressure','Projects with abnormally high client changes (IQR outlier: Q3 + 1.5×IQR)',getMgmtHighRevRows())">
+      <div class="ss-lbl">🔁 High Revision Pressure <span class="info-btn" onclick="event.stopPropagation();showInfo(this,'High Revision Pressure','Projects with abnormally high client changes, detected via IQR outlier method (Q3 + 1.5 × IQR). These generate significantly more revision cycles than peers — often signalling scope creep or quality issues.','Based on: DIARY Client Changes · Threshold recalculates dynamically on every filter change')">i</span></div>
+      <div class="ss-val" id="s-high-rev">—</div>
+      <div class="ss-sub">IQR outlier detection · click to inspect</div>
     </div>
     <div class="ss-card c-blue">
       <div class="ss-lbl">👤 Analysed People <span class="info-btn" onclick="event.stopPropagation();showInfo(this,'Analysed People','Total number of SW, QA and PM people with at least some iTime activity in the selected period. Management levels (TL, Manager, Director, VP) are excluded from peer comparisons but included in this count.','Roles included: SW · QA · PM · Working levels: Associate, Executive, Senior, Expert')">i</span></div>
@@ -1924,7 +1964,17 @@ function buildData(effR,zohoR,itimeR,fname,posR=[],budgetType='zoho'){
       itime_sd:it.sd,itime_pm:it.pm,budget_sd:bu.sd,budget_pm:bu.pm,
       sd_eff:bu.sd>0?(bu.sd-it.sd)/bu.sd*100:null,pm_eff:bu.pm>0?(bu.pm-it.pm)/bu.pm*100:null,
       iqVer:bu.iqVer||null,cancelled:bu.cancelled||null,
-      delta_sd:bu.delta_sd!=null?bu.delta_sd:null,delta_pm:bu.delta_pm!=null?bu.delta_pm:null})
+      delta_sd:bu.delta_sd!=null?bu.delta_sd:null,delta_pm:bu.delta_pm!=null?bu.delta_pm:null,
+      f1_sd:bu.f1_sd!=null?bu.f1_sd:null,f1_pm:bu.f1_pm!=null?bu.f1_pm:null,
+      // EFLD: 0 = error-free, >0 = had errors, null = not available
+      efld:r['EFLD']!=null&&r['EFLD']!==''?parseFloat(r['EFLD']):null,
+      // Client changes (DIARY Client Changes)
+      clientChanges:r['DIARY Client Changes']!=null&&r['DIARY Client Changes']!==''?parseInt(r['DIARY Client Changes']):null,
+      // Setup time in calendar days: 1st link to RE minus SW Assignment (Excel serial numbers)
+      setupDays:(r['TIMING Actual 1st link to RE']!=null&&r['TIMING Actual SW Assignment']!=null&&
+                 parseFloat(r['TIMING Actual 1st link to RE'])>0&&parseFloat(r['TIMING Actual SW Assignment'])>0)
+               ? Math.max(0, parseFloat(r['TIMING Actual 1st link to RE']) - parseFloat(r['TIMING Actual SW Assignment']))
+               : null})
   }
   G={projects,personHours:ph,filename:fname,_itimeRows:itimeR,_raw:{effR,zohoR,itimeR,fname}};
   initDash();
@@ -1955,6 +2005,11 @@ function buildFilters(){
     FSEL[fd.id]=new Set();
     buildMS(fd.id,fd.lbl,vals,fd.labelFmt);
   }
+  // Cache all month keys and build Period B dropdowns
+  _allMonthKeys=[...new Set(G.projects.map(p=>String(p.monthKey||'')).filter(Boolean))].sort();
+  const yearVals=[...new Set(G.projects.map(p=>String(p.yearStart||'')).filter(Boolean))].sort();
+  buildPeriodB(_allMonthKeys);
+  buildPeriodBYear(yearVals);
 }
 
 function buildMS(wid,lbl,vals,labelFmt){
@@ -1972,14 +2027,18 @@ function buildMS(wid,lbl,vals,labelFmt){
 
 function msToggle(wid,v,item){
   const s=FSEL[wid];s.has(v)?s.delete(v):s.add(v);
-  item.classList.toggle('checked',s.has(v));updateTrig(wid);renderAll();
+  item.classList.toggle('checked',s.has(v));updateTrig(wid);
+  if(wid==='ms-yr')rebuildMonthList('A');
+  renderAll();
 }
 function msSel(wid,all){
   FSEL[wid].clear();
   const items=document.querySelectorAll(`#${wid}-l .ms-item`);
   if(all){items.forEach(i=>{if(!i.classList.contains('hidden')){FSEL[wid].add(i.dataset.v);i.classList.add('checked')}})}
   else{items.forEach(i=>i.classList.remove('checked'))}
-  updateTrig(wid);renderAll();
+  updateTrig(wid);
+  if(wid==='ms-yr')rebuildMonthList('A');
+  renderAll();
 }
 function msSearch(inp,wid){
   const q=inp.value.toLowerCase();
@@ -1998,15 +2057,158 @@ function updateTrig(wid){
 }
 function closeDrops(){document.querySelectorAll('.ms-drop').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-trigger').forEach(t=>t.classList.remove('open'))}
 document.addEventListener('click',closeDrops);
-function resetAll(){const rfEl=document.getElementById('f-revised');if(rfEl)rfEl.value='';for(const fd of FD){FSEL[fd.id]=new Set();document.querySelectorAll(`#${fd.id}-l .ms-item`).forEach(i=>i.classList.remove('checked'));updateTrig(fd.id)}
+
+// Position fixed info-tooltips relative to the info-btn on hover
+document.addEventListener('mouseover',function(e){
+  const btn=e.target.closest('.eff-scope .info-btn');
+  if(!btn)return;
+  const tt=btn.querySelector('.info-tooltip');if(!tt)return;
+  const r=btn.getBoundingClientRect();
+  // Position below the button, centered; clamp to viewport edges
+  let left=r.left+r.width/2-130; // 130 = half of min-width(260)
+  const maxLeft=window.innerWidth-350;
+  left=Math.max(8,Math.min(left,maxLeft));
+  tt.style.top=(r.bottom+6)+'px';
+  tt.style.left=left+'px';
+});
+function resetAll(){
+  const rfEl=document.getElementById('f-revised');if(rfEl)rfEl.value='';
+  for(const fd of FD){FSEL[fd.id]=new Set();document.querySelectorAll(`#${fd.id}-l .ms-item`).forEach(i=>i.classList.remove('checked'));updateTrig(fd.id)}
   const jbEl=document.getElementById('jb-search');if(jbEl)jbEl.value='';
   _jbFilter='';
-  renderAll()}
+  if(_compareMode){toggleCompare();}else{renderAll();}
+}
 let _jbFilter='';
-function filterJB(v){
-  _jbFilter=v.trim().toLowerCase();
+function filterJB(v){_jbFilter=v.trim().toLowerCase();renderAll();}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARE MODE
+// ═══════════════════════════════════════════════════════════════
+let _compareMode=false, _periodB=new Set(), _periodBYears=new Set(), _allMonthKeys=[];
+const _mFmt=v=>{const[y,m]=v.split('-');return['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)]+' '+y};
+
+function toggleCompare(){
+  _compareMode=!_compareMode;
+  const btn=document.getElementById('cmp-toggle');
+  const show=el=>document.getElementById(el)&&(document.getElementById(el).style.display='');
+  const hide=el=>document.getElementById(el)&&(document.getElementById(el).style.display='none');
+  if(_compareMode){
+    btn.classList.add('active');btn.style.cssText='background:#a855f7;border:1px solid #a855f7;border-radius:6px;padding:5px 10px;color:white;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;outline:none;display:flex;align-items:center;gap:6px;transition:all .15s';
+    btn.innerHTML='<span>⇄</span><span>Exit Compare</span>';
+    ['cmp-label-a','cmp-break-1','cmp-label-b','eff-ms-year-b','ms-yr-b','cmp-break-2'].forEach(show);
+  } else {
+    btn.classList.remove('active');btn.style.cssText='background:#0d1526;border:1px solid #222f48;border-radius:6px;padding:5px 10px;color:#7d93b5;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;outline:none;display:flex;align-items:center;gap:6px;transition:all .15s';
+    btn.innerHTML='<span>⇄</span><span>Compare</span>';
+    ['cmp-label-a','cmp-break-1','cmp-label-b','eff-ms-year-b','ms-yr-b','cmp-break-2'].forEach(hide);
+    _periodB.clear();_periodBYears.clear();
+    document.querySelectorAll('#eff-ms-year-b-l .ms-item, #ms-yr-b-l .ms-item').forEach(i=>i.classList.remove('checked'));
+    updateTrigMonthB();updateTrigYearB();
+  }
   renderAll();
 }
+
+function rebuildMonthList(period){
+  const wid=period==='A'?'eff-ms-year':'eff-ms-year-b';
+  const listEl=document.getElementById(wid+'-l');if(!listEl)return;
+  const yearFilter=period==='A'?FSEL['ms-yr']:_periodBYears;
+  const monthSet=period==='A'?FSEL['eff-ms-year']:_periodB;
+  const filtered=_allMonthKeys.filter(mk=>!yearFilter||yearFilter.size===0||yearFilter.has(mk.split('-')[0]));
+  for(const mk of [...monthSet])if(!filtered.includes(mk))monthSet.delete(mk);
+  listEl.innerHTML='';
+  for(const v of filtered){
+    const item=document.createElement('div');item.className='ms-item'+(monthSet.has(v)?' checked':'');item.dataset.v=v;
+    item.innerHTML=`<div class="ms-chk"></div><span>${_mFmt(v)}</span>`;
+    item.onclick=e=>{e.stopPropagation();period==='A'?msToggle('eff-ms-year',v,item):msToggleMonthB(v,item)};
+    listEl.appendChild(item);
+  }
+  period==='A'?updateTrig('eff-ms-year'):updateTrigMonthB();
+}
+
+function _buildDropdown(wid,vals,labelFn,toggleFn,selFn,searchFn,trigUpdateFn,borderCol){
+  const w=document.getElementById(wid);if(!w)return;w.innerHTML='';
+  const trig=document.createElement('div');trig.className='ms-trigger';trig.id=wid+'-t';
+  if(borderCol)trig.style.borderColor=borderCol;
+  trig.innerHTML=`<span class="ms-txt" ${borderCol?`style="color:#a78bfa"`:''}>${labelFn()}</span><span class="ms-arr">▾</span>`;
+  const drop=document.createElement('div');drop.className='ms-drop';drop.id=wid+'-d';
+  drop.innerHTML=`<div class="ms-srch"><input type="text" placeholder="Search…" oninput="${searchFn}(this)"></div><div class="ms-acts"><button class="ms-act" onclick="${selFn}(true)">Select All</button><button class="ms-act" onclick="${selFn}(false)">Clear All</button></div><div class="ms-list" id="${wid}-l"></div>`;
+  drop.addEventListener('click',e=>e.stopPropagation());
+  const list=drop.querySelector('.ms-list');
+  for(const v of vals){const item=document.createElement('div');item.className='ms-item';item.dataset.v=v;item.innerHTML=`<div class="ms-chk"></div><span>${typeof toggleFn==='function'?v:v}</span>`;item.onclick=e=>{e.stopPropagation();toggleFn(v,item)};list.appendChild(item)}
+  trig.onclick=e=>{e.stopPropagation();const isO=drop.classList.contains('open');closeDrops();if(!isO){drop.classList.add('open');trig.classList.add('open')}};
+  w.appendChild(trig);w.appendChild(drop);
+}
+
+function buildPeriodB(vals){
+  const wid='eff-ms-year-b';const w=document.getElementById(wid);if(!w)return;w.innerHTML='';
+  const trig=document.createElement('div');trig.className='ms-trigger';trig.id=wid+'-t';trig.style.borderColor='#a855f7';
+  trig.innerHTML=`<span class="ms-txt" style="color:#a78bfa">Month B: All</span><span class="ms-arr">▾</span>`;
+  const drop=document.createElement('div');drop.className='ms-drop';drop.id=wid+'-d';
+  drop.innerHTML=`<div class="ms-srch"><input type="text" placeholder="Search…" oninput="msSearchMonthB(this)"></div><div class="ms-acts"><button class="ms-act" onclick="msSelMonthB(true)">Select All</button><button class="ms-act" onclick="msSelMonthB(false)">Clear All</button></div><div class="ms-list" id="${wid}-l"></div>`;
+  drop.addEventListener('click',e=>e.stopPropagation());
+  const list=drop.querySelector('.ms-list');
+  for(const v of vals){const item=document.createElement('div');item.className='ms-item';item.dataset.v=v;item.innerHTML=`<div class="ms-chk"></div><span>${_mFmt(v)}</span>`;item.onclick=e=>{e.stopPropagation();msToggleMonthB(v,item)};list.appendChild(item)}
+  trig.onclick=e=>{e.stopPropagation();const isO=drop.classList.contains('open');closeDrops();if(!isO){drop.classList.add('open');trig.classList.add('open')}};
+  w.appendChild(trig);w.appendChild(drop);
+}
+function buildPeriodBYear(vals){
+  const wid='ms-yr-b';const w=document.getElementById(wid);if(!w)return;w.innerHTML='';
+  const trig=document.createElement('div');trig.className='ms-trigger';trig.id=wid+'-t';trig.style.borderColor='#a855f7';
+  trig.innerHTML=`<span class="ms-txt" style="color:#a78bfa">Year B: All</span><span class="ms-arr">▾</span>`;
+  const drop=document.createElement('div');drop.className='ms-drop';drop.id=wid+'-d';
+  drop.innerHTML=`<div class="ms-srch"><input type="text" placeholder="Search…" oninput="msSearchYearB(this)"></div><div class="ms-acts"><button class="ms-act" onclick="msSelYearB(true)">Select All</button><button class="ms-act" onclick="msSelYearB(false)">Clear All</button></div><div class="ms-list" id="${wid}-l"></div>`;
+  drop.addEventListener('click',e=>e.stopPropagation());
+  const list=drop.querySelector('.ms-list');
+  for(const v of vals){const item=document.createElement('div');item.className='ms-item';item.dataset.v=v;item.innerHTML=`<div class="ms-chk"></div><span>${v}</span>`;item.onclick=e=>{e.stopPropagation();msToggleYearB(v,item)};list.appendChild(item)}
+  trig.onclick=e=>{e.stopPropagation();const isO=drop.classList.contains('open');closeDrops();if(!isO){drop.classList.add('open');trig.classList.add('open')}};
+  w.appendChild(trig);w.appendChild(drop);
+}
+
+// Period B Month handlers
+function msToggleMonthB(v,item){_periodB.has(v)?_periodB.delete(v):_periodB.add(v);item.classList.toggle('checked',_periodB.has(v));updateTrigMonthB();renderAll();}
+function msSelMonthB(all){const items=document.querySelectorAll('#eff-ms-year-b-l .ms-item');if(all){items.forEach(i=>{if(!i.classList.contains('hidden')){_periodB.add(i.dataset.v);i.classList.add('checked')}})}else{_periodB.clear();items.forEach(i=>i.classList.remove('checked'))}updateTrigMonthB();renderAll();}
+function msSearchMonthB(inp){const q=inp.value.toLowerCase();document.querySelectorAll('#eff-ms-year-b-l .ms-item').forEach(i=>i.classList.toggle('hidden',!i.dataset.v.toLowerCase().includes(q)));}
+function updateTrigMonthB(){
+  const t=document.getElementById('eff-ms-year-b-t');if(!t)return;
+  let txt,bdg='';
+  if(_periodB.size===0)txt='Month B: All';
+  else if(_periodB.size===1){const v=[..._periodB][0];txt=_mFmt(v);bdg=`<span class="ms-bdg" style="background:#a855f7">1</span>`;}
+  else{txt=`Month B: ${_periodB.size} selected`;bdg=`<span class="ms-bdg" style="background:#a855f7">${_periodB.size}</span>`;}
+  t.innerHTML=`<span class="ms-txt" style="color:#a78bfa">${txt}</span>${bdg}<span class="ms-arr">▾</span>`;
+  t.onclick=e=>{e.stopPropagation();const d=document.getElementById('eff-ms-year-b-d'),isO=d.classList.contains('open');closeDrops();if(!isO){d.classList.add('open');t.classList.add('open')}};
+}
+// Period B Year handlers
+function msToggleYearB(v,item){_periodBYears.has(v)?_periodBYears.delete(v):_periodBYears.add(v);item.classList.toggle('checked',_periodBYears.has(v));updateTrigYearB();rebuildMonthList('B');renderAll();}
+function msSelYearB(all){const items=document.querySelectorAll('#ms-yr-b-l .ms-item');if(all){items.forEach(i=>{if(!i.classList.contains('hidden')){_periodBYears.add(i.dataset.v);i.classList.add('checked')}})}else{_periodBYears.clear();items.forEach(i=>i.classList.remove('checked'))}updateTrigYearB();rebuildMonthList('B');renderAll();}
+function msSearchYearB(inp){const q=inp.value.toLowerCase();document.querySelectorAll('#ms-yr-b-l .ms-item').forEach(i=>i.classList.toggle('hidden',!i.dataset.v.toLowerCase().includes(q)));}
+function updateTrigYearB(){
+  const t=document.getElementById('ms-yr-b-t');if(!t)return;
+  let txt,bdg='';
+  if(_periodBYears.size===0)txt='Year B: All';
+  else if(_periodBYears.size===1){const v=[..._periodBYears][0];txt=v;bdg=`<span class="ms-bdg" style="background:#a855f7">1</span>`;}
+  else{txt=`Year B: ${_periodBYears.size} selected`;bdg=`<span class="ms-bdg" style="background:#a855f7">${_periodBYears.size}</span>`;}
+  t.innerHTML=`<span class="ms-txt" style="color:#a78bfa">${txt}</span>${bdg}<span class="ms-arr">▾</span>`;
+  t.onclick=e=>{e.stopPropagation();const d=document.getElementById('ms-yr-b-d'),isO=d.classList.contains('open');closeDrops();if(!isO){d.classList.add('open');t.classList.add('open')}};
+}
+// filterPB — same logic as filterP but uses Period B month/year sets
+function filterPB(){
+  if(!_compareMode)return[];
+  if(_periodB.size===0&&_periodBYears.size===0)return[];
+  const revSel=document.getElementById('f-revised')?.value||'';
+  return G.projects.filter(p=>{
+    if(_periodB.size>0&&!_periodB.has(String(p.monthKey||'')))return false;
+    if(_periodBYears.size>0&&!_periodBYears.has(String(p.yearStart||'')))return false;
+    for(const fd of FD){
+      if(fd.id==='eff-ms-year'||fd.id==='ms-yr')continue;
+      const s=FSEL[fd.id];if(!s||s.size===0)continue;
+      if(!s.has(String(p[fd.key]||'')))return false;
+    }
+    if(_jbFilter&&!(p.jb||'').toLowerCase().includes(_jbFilter)&&!(p.name||'').toLowerCase().includes(_jbFilter))return false;
+    if(revSel==='yes'&&!(p.delta_sd!=null||p.delta_pm!=null))return false;
+    if(revSel==='no'&&(p.delta_sd!=null||p.delta_pm!=null))return false;
+    return true;
+  });
+}
+
 function filterP(){
   const revSel=document.getElementById('f-revised')?.value||'';
   return G.projects.filter(p=>{
@@ -2040,132 +2242,266 @@ function sn(n){const p=n.trim().split(' ');return p.length>1?p[0][0]+'. '+p.slic
 // RENDER
 function renderAll(){const ps=filterP();renderOv(ps);renderTeams(ps);renderSL(ps);renderPeople(ps);renderTrend(ps)}
 
-function renderOv(ps){
-  window._ovPs=ps; // store for click handlers
-  const sdv=ps.filter(p=>p.budget_sd>0),pmv=ps.filter(p=>p.budget_pm>0);
-  const tbsd=sdv.reduce((s,p)=>s+p.budget_sd,0),tisd=sdv.reduce((s,p)=>s+p.itime_sd,0);
-  const tbpm=pmv.reduce((s,p)=>s+p.budget_pm,0),tipm=pmv.reduce((s,p)=>s+p.itime_pm,0);
-  const asd=tbsd>0?(tbsd-tisd)/tbsd*100:null,apm=tbpm>0?(tbpm-tipm)/tbpm*100:null;
-  const effs=ps.map(p=>p.sd_eff).filter(v=>v!=null),msd=effs.length?med(effs):null;
-  const totsd=ps.reduce((s,p)=>s+p.itime_sd,0),totpm=ps.reduce((s,p)=>s+p.itime_pm,0);
-  $$('k-tot').textContent=ps.length.toLocaleString();
-  $$('k-tot-s').textContent=`${sdv.length} with SD budget · ${pmv.length} with PM budget`;
-  setKpi('k-sd-agg',asd);setKpi('k-pm-agg',apm);setKpi('k-sd-med',msd);
-  $$('k-sd-h').textContent=fmtH(totsd);$$('k-sd-b').textContent=`Budget: ${fmtN(tbsd)} h`;
-  $$('k-pm-h').textContent=fmtH(totpm);$$('k-pm-b').textContent=`Budget: ${fmtN(tbpm)} h`;
-  const revPs=ps.filter(p=>p.delta_sd!=null||p.delta_pm!=null);
-  const kpiRevEl=document.getElementById('kpi-rev');
-  if(kpiRevEl){
-    if(revPs.length>0){kpiRevEl.style.display='';
-      $$('k-rev').textContent=revPs.length;
-      const avgDsd=revPs.reduce((s,p)=>s+Math.abs(p.delta_sd||0),0)/revPs.length;
-      const avgDpm=revPs.reduce((s,p)=>s+Math.abs(p.delta_pm||0),0)/revPs.length;
-      $$('k-rev-s').textContent='Avg Δ SD: '+avgDsd.toFixed(1)+'h · PM: '+avgDpm.toFixed(1)+'h';}
-    else kpiRevEl.style.display='none';}
-
-  function bkt(key){const b=[0,0,0,0,0,0,0];for(const p of ps){const v=p[key];if(v==null)continue;if(v>50)b[0]++;else if(v>20)b[1]++;else if(v>=0)b[2]++;else if(v>=-50)b[3]++;else if(v>=-100)b[4]++;else if(v>=-200)b[5]++;else b[6]++}return b}
-  const bl=['> +50%','+20–50%','0–+20%','0–−50%','−50–−100%','−100–−200%','< −200%'];
-  mc('c-sd-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('sd_eff'),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
-  mc('c-pm-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('pm_eff'),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
-  const effBrackets=['sd_eff','pm_eff'];
-  const effRanges=[[50,Infinity],[20,50],[0,20],[-50,0],[-100,-50],[-200,-100],[-Infinity,-200]];
-  addChartClick('c-sd-d',(lbl,idx)=>({title:`SD Efficiency: ${lbl}`,subtitle:`Projects with SD efficiency in this bracket`,projects:window._ovPs.filter(p=>{const v=p.sd_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})}));
-  addChartClick('c-pm-d',(lbl,idx)=>({title:`PM Efficiency: ${lbl}`,subtitle:`Projects with PM efficiency in this bracket`,projects:window._ovPs.filter(p=>{const v=p.pm_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})}));
-  const tc={};ps.forEach(p=>{tc[p.projectType]=(tc[p.projectType]||0)+1});
-  const te=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
-  mc('c-type','doughnut',{labels:te.map(t=>t[0]),datasets:[{data:te.map(t=>t[1]),backgroundColor:PAL,borderWidth:1,borderColor:'#131929'}]},{plugins:{legend:{position:'right',labels:{color:'#dce3ef',font:{family:'Inter',size:12},boxWidth:12,padding:8}}},scales:{x:{display:false},y:{display:false}}});
-  addChartClick('c-type',(lbl)=>({title:`Project Type: ${lbl}`,subtitle:`All filtered projects of this type`,projects:window._ovPs.filter(p=>p.projectType===lbl)}));
-  const cm={};ps.forEach(p=>{if(!p.complexity)return;if(!cm[p.complexity])cm[p.complexity]=[];if(p.sd_eff!=null)cm[p.complexity].push(p.sd_eff)});
-  const ck=Object.keys(cm).sort(),cv=ck.map(k=>med(cm[k]));
-  mc('c-cplx','bar',{labels:ck.map(k=>k.slice(0,10)),datasets:[{label:'Median SD Eff.',data:cv,backgroundColor:cv.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}}});
-  addChartClick('c-cplx',(lbl,idx)=>({title:`Complexity: ${ck[idx]}`,subtitle:`Projects with this complexity level`,projects:window._ovPs.filter(p=>p.complexity===ck[idx])}));
-  const sh={};ps.forEach(p=>{if(!p.serviceLine)return;sh[p.serviceLine]=(sh[p.serviceLine]||0)+p.itime_sd+p.itime_pm});
-  const se=Object.entries(sh).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  mc('c-sl-ov','bar',{labels:se.map(e=>e[0].split(' - ')[0]),datasets:[{label:'Total Hours',data:se.map(e=>Math.round(e[1])),backgroundColor:'#5b8dd9',borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
-  addChartClick('c-sl-ov',(lbl,idx)=>({title:`Service Line: ${se[idx][0]}`,subtitle:`Projects in this service line`,projects:window._ovPs.filter(p=>p.serviceLine===se[idx][0])}));
-
-  // Hours breakdown tables
-  function hrsRow(label,p2){
+// ─── Shared helpers for Hours Breakdown tables ────────────────────────────────
+function _hrsRowSingle(label,p2){
+  const isd=p2.reduce((s,p)=>s+p.itime_sd,0),bsd=p2.reduce((s,p)=>s+p.budget_sd,0);
+  const ipm=p2.reduce((s,p)=>s+p.itime_pm,0),bpm=p2.reduce((s,p)=>s+p.budget_pm,0);
+  const dsd=bsd>0?isd-bsd:null,dpm=bpm>0?ipm-bpm:null;
+  const asd2=bsd>0?(bsd-isd)/bsd*100:null,apm2=bpm>0?(bpm-ipm)/bpm*100:null;
+  const dC=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
+  const dF=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
+  // EFLD
+  const efPs=p2.filter(p=>p.efld!=null),efFree=efPs.filter(p=>p.efld===0).length;
+  const efPct=efPs.length?efFree/efPs.length*100:null;
+  const efCol=efPct==null?'#7d93b5':efPct>=90?'#34d399':efPct>=75?'#a3e635':efPct>=60?'#fbbf24':'#f87171';
+  const efCell=efPct==null?'<td style="color:#3d5070">—</td>':`<td><span style="color:${efCol};font-weight:600">${efPct.toFixed(1)}%</span></td>`;
+  return`<tr><td style="font-weight:500">${label}</td><td>${p2.length}</td>${efCell}<td>${fmtN(isd)}</td><td>${fmtN(bsd)}</td><td ${dC(dsd)}>${dF(dsd)}</td><td>${fmtN(ipm)}</td><td>${fmtN(bpm)}</td><td ${dC(dpm)}>${dF(dpm)}</td><td style="font-weight:600">${fmtN(isd+ipm)}</td><td style="font-weight:600">${fmtN(bsd+bpm)}</td><td><span class="eb ${ecls(asd2)}">${fmt(asd2)}</span></td><td><span class="eb ${ecls(apm2)}">${fmt(apm2)}</span></td></tr>`;
+}
+function _hrsRowPair(label,pA,pB){
+  const calc=p2=>{
     const isd=p2.reduce((s,p)=>s+p.itime_sd,0),bsd=p2.reduce((s,p)=>s+p.budget_sd,0);
     const ipm=p2.reduce((s,p)=>s+p.itime_pm,0),bpm=p2.reduce((s,p)=>s+p.budget_pm,0);
-    const dsd=bsd>0?isd-bsd:null, dpm=bpm>0?ipm-bpm:null;
-    const asd2=bsd>0?(bsd-isd)/bsd*100:null, apm2=bpm>0?(bpm-ipm)/bpm*100:null;
-    const dCls=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
-    const dFmt=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
-    return`<tr>
-      <td style="font-weight:500">${label}</td>
-      <td>${p2.length}</td>
-      <td>${fmtN(isd)}</td><td>${fmtN(bsd)}</td>
-      <td ${dCls(dsd)}>${dFmt(dsd)}</td>
-      <td>${fmtN(ipm)}</td><td>${fmtN(bpm)}</td>
-      <td ${dCls(dpm)}>${dFmt(dpm)}</td>
-      <td style="font-weight:600">${fmtN(isd+ipm)}</td>
-      <td style="font-weight:600">${fmtN(bsd+bpm)}</td>
-      <td><span class="eb ${ecls(asd2)}">${fmt(asd2)}</span></td>
-      <td><span class="eb ${ecls(apm2)}">${fmt(apm2)}</span></td>
-    </tr>`;
+    const efPs=p2.filter(p=>p.efld!=null),efFree=efPs.filter(p=>p.efld===0).length;
+    const efPct=efPs.length?efFree/efPs.length*100:null;
+    return{isd,bsd,ipm,bpm,dsd:bsd>0?isd-bsd:null,dpm:bpm>0?ipm-bpm:null,asd:bsd>0?(bsd-isd)/bsd*100:null,apm:bpm>0?(bpm-ipm)/bpm*100:null,cnt:p2.length,efPct};
+  };
+  const a=calc(pA),b=calc(pB);
+  const dC=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
+  const dF=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
+  const efCol=v=>v==null?'#7d93b5':v>=90?'#34d399':v>=75?'#a3e635':v>=60?'#fbbf24':'#f87171';
+  const efCell=(v,extra)=>v==null?`<td style="color:#3d5070${extra?';'+extra:''}" >—</td>`:`<td><span style="color:${efCol(v)};font-weight:600${extra?';'+extra:''}">${v.toFixed(1)}%</span></td>`;
+  const aBdg=`<span style="background:#1e2d45;color:#e2e8f0;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">A</span>`;
+  const bBdg=`<span style="background:#4c1d95;color:#e9d5ff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">B</span>`;
+  const aRow=`<tr style="border-bottom:1px dashed rgba(91,141,217,.15)"><td style="font-weight:500" rowspan="2">${label}</td><td>${aBdg}${a.cnt}</td>${efCell(a.efPct)}<td>${fmtN(a.isd)}</td><td>${fmtN(a.bsd)}</td><td ${dC(a.dsd)}>${dF(a.dsd)}</td><td>${fmtN(a.ipm)}</td><td>${fmtN(a.bpm)}</td><td ${dC(a.dpm)}>${dF(a.dpm)}</td><td style="font-weight:600">${fmtN(a.isd+a.ipm)}</td><td style="font-weight:600">${fmtN(a.bsd+a.bpm)}</td><td><span class="eb ${ecls(a.asd)}">${fmt(a.asd)}</span></td><td><span class="eb ${ecls(a.apm)}">${fmt(a.apm)}</span></td></tr>`;
+  const bRow=`<tr style="background:rgba(168,85,247,.04);border-bottom:1px solid var(--border)"><td>${bBdg}${b.cnt}</td>${efCell(b.efPct,'color:#c4b5fd')}<td style="color:#c4b5fd">${fmtN(b.isd)}</td><td style="color:#c4b5fd">${fmtN(b.bsd)}</td><td ${dC(b.dsd)}>${dF(b.dsd)}</td><td style="color:#c4b5fd">${fmtN(b.ipm)}</td><td style="color:#c4b5fd">${fmtN(b.bpm)}</td><td ${dC(b.dpm)}>${dF(b.dpm)}</td><td style="font-weight:600;color:#c4b5fd">${fmtN(b.isd+b.ipm)}</td><td style="font-weight:600;color:#c4b5fd">${fmtN(b.bsd+b.bpm)}</td><td><span class="eb ${ecls(b.asd)}">${fmt(b.asd)}</span></td><td><span class="eb ${ecls(b.apm)}">${fmt(b.apm)}</span></td></tr>`;
+  return aRow+bRow;
+}
+function applyHrsBreakdownTable(tbodyId,groupKey,psA,psB,cmp){
+  const el=$$(tbodyId);if(!el)return;
+  const gA=grp(psA,groupKey);
+  if(cmp){
+    const gB=grp(psB,groupKey);
+    const keys=[...new Set([...Object.keys(gA),...Object.keys(gB)])].filter(Boolean)
+      .sort((a,b)=>(gA[b]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)+(gB[b]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-((gA[a]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)+(gB[a]||[]).reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)));
+    const tot=_hrsRowPair('TOTAL',psA,psB).replace(/<tr /g,'<tr data-total="1" ').replace('<tr data-total="1" style="border-bottom:1px dashed rgba(91,141,217,.15)">','<tr data-total="1" style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
+    el.innerHTML=keys.map(k=>_hrsRowPair(k,gA[k]||[],gB[k]||[])).join('')+tot;
+  } else {
+    const keys=Object.keys(gA).filter(Boolean).sort((a,b)=>gA[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-gA[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
+    el.innerHTML=keys.map(k=>_hrsRowSingle(k,gA[k])).join('')+_hrsRowSingle('TOTAL',psA).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
   }
-  const slm=grp(ps,'serviceLine');
-  const slk=Object.keys(slm).filter(Boolean).sort((a,b)=>slm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-slm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
-  $$('t-hrs-sl').innerHTML=slk.map(k=>hrsRow(k,slm[k])).join('')+hrsRow('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
-  $$('hrs-bdg').textContent=`${fmtN(totsd+totpm)} h total`;
-  const ptm=grp(ps,'projectType');
-  const ptk=Object.keys(ptm).filter(Boolean).sort((a,b)=>ptm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-ptm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
-  $$('t-hrs-pt').innerHTML=ptk.map(k=>hrsRow(k,ptm[k])).join('')+hrsRow('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
+}
+
+// ─── renderOv ─────────────────────────────────────────────────────────────────
+function renderOv(ps){
+  window._ovPs=ps;
+  const cmp=_compareMode&&(_periodB.size>0||_periodBYears.size>0);
+  const psB=cmp?filterPB():null;
+
+  // ── KPI computation helpers ──
+  const kpiOf=p2=>{
+    const sdv=p2.filter(p=>p.budget_sd>0),pmv=p2.filter(p=>p.budget_pm>0);
+    const tbsd=sdv.reduce((s,p)=>s+p.budget_sd,0),tisd=sdv.reduce((s,p)=>s+p.itime_sd,0);
+    const tbpm=pmv.reduce((s,p)=>s+p.budget_pm,0),tipm=pmv.reduce((s,p)=>s+p.itime_pm,0);
+    const efPs=p2.filter(p=>p.efld!=null),efFree=efPs.filter(p=>p.efld===0).length;
+    return{cnt:p2.length,sdCnt:sdv.length,pmCnt:pmv.length,
+      asd:tbsd>0?(tbsd-tisd)/tbsd*100:null,apm:tbpm>0?(tbpm-tipm)/tbpm*100:null,
+      totsd:p2.reduce((s,p)=>s+p.itime_sd,0),totpm:p2.reduce((s,p)=>s+p.itime_pm,0),
+      tbsd,tbpm,efPs:efPs.length,efFree,efPct:efPs.length?efFree/efPs.length*100:null};
+  };
+  const A=kpiOf(ps),B=cmp?kpiOf(psB):null;
+
+  // ── Period header ──
+  let hdr=document.getElementById('kpi-period-hdr');
+  if(cmp){
+    const aMonths=FSEL['eff-ms-year']?.size>0?[...FSEL['eff-ms-year']].sort().map(_mFmt).join(', '):'All months';
+    const bMonths=_periodB.size>0?[..._periodB].sort().map(_mFmt).join(', '):_periodBYears.size>0?[..._periodBYears].join(', '):'-';
+    if(!hdr){hdr=document.createElement('div');hdr.id='kpi-period-hdr';hdr.style.cssText='display:flex;gap:18px;font-size:11px;margin-bottom:10px;flex-wrap:wrap';const sl=document.querySelector('#eff-tab-overview .sec-lbl');if(sl)sl.parentNode.insertBefore(hdr,sl.nextSibling);}
+    hdr.innerHTML=`<span style="color:#e2e8f0;font-weight:600">● PERIOD A: <span style="color:#7d93b5">${aMonths.length>60?aMonths.slice(0,58)+'…':aMonths}</span> (${A.cnt} projects)</span><span style="color:#a78bfa;font-weight:600">● PERIOD B: <span style="color:#7d93b5">${bMonths.length>60?bMonths.slice(0,58)+'…':bMonths}</span> (${B.cnt} projects)</span>`;
+    hdr.style.display='flex';
+  } else if(hdr){hdr.style.display='none';}
+
+  // ── KPI rendering helpers ──
+  const setC=(id,vA,vB,fmtFn,unit)=>{
+    const e=$$(id);if(!e)return;
+    const fa=vA==null?'—':fmtFn(vA),fb=vB==null?'—':fmtFn(vB);
+    let dH='';
+    if(vA!=null&&vB!=null){const d=vA-vB,col=d>0?'#4f9e72':d<0?'#c96060':'#7d93b5',arr=d>0?'▲':d<0?'▼':'●',sgn=d>0?'+':'';dH=`<div style="font-size:11px;color:${col};font-weight:600;margin-top:2px">${arr} ${sgn}${Math.abs(d)<0.05?'0':d.toFixed(1)}${unit||''}</div>`;}
+    e.innerHTML=`<div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:17px;color:#e2e8f0;font-weight:700">${fa}</div><div style="font-size:13px;color:#a78bfa;font-weight:600">${fb}</div>${dH}</div>`;
+    e.className='kpi-val';e.style.fontSize='';
+  };
+
+  if(cmp){
+    // Total Projects
+    const dN=A.cnt-B.cnt,cN=dN>0?'#4f9e72':dN<0?'#c96060':'#7d93b5';
+    $$('k-tot').innerHTML=`<div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:17px;color:#e2e8f0;font-weight:700">${A.cnt.toLocaleString()}</div><div style="font-size:13px;color:#a78bfa;font-weight:600">${B.cnt.toLocaleString()}</div><div style="font-size:11px;color:${cN};font-weight:600;margin-top:2px">${dN>0?'▲':dN<0?'▼':'●'} ${dN>0?'+':''}${dN}</div></div>`;
+    $$('k-tot').className='kpi-val';$$('k-tot').style.fontSize='';
+    const dSD=A.sdCnt-B.sdCnt,dPM=A.pmCnt-B.pmCnt;
+    $$('k-tot-s').innerHTML=`<div>SD budget: A ${A.sdCnt} → B ${B.sdCnt} <span style="color:${dSD>0?'#4f9e72':dSD<0?'#c96060':'#7d93b5'};font-weight:600">${dSD>0?'▲':'▼'} ${dSD>0?'+':''}${dSD}</span><br>PM budget: A ${A.pmCnt} → B ${B.pmCnt} <span style="color:${dPM>0?'#4f9e72':dPM<0?'#c96060':'#7d93b5'};font-weight:600">${dPM>0?'▲':'▼'} ${dPM>0?'+':''}${dPM}</span></div>`;
+    setC('k-sd-agg',A.asd,B.asd,v=>(v>=0?'+':'')+v.toFixed(1)+'%','pp');
+    setC('k-pm-agg',A.apm,B.apm,v=>(v>=0?'+':'')+v.toFixed(1)+'%','pp');
+    setC('k-sd-h',A.totsd,B.totsd,fmtH,'h');
+    $$('k-sd-b').textContent=`Budget A: ${fmtN(A.tbsd)} h · B: ${fmtN(B.tbsd)} h`;
+    setC('k-pm-h',A.totpm,B.totpm,fmtH,'h');
+    $$('k-pm-b').textContent=`Budget A: ${fmtN(A.tbpm)} h · B: ${fmtN(B.tbpm)} h`;
+    // EFLD in compare
+    const efEl=$$('k-efld'),efSEl=$$('k-efld-s');
+    if(efEl){
+      const ecol2=v=>v==null?'#7d93b5':v>=90?'#34d399':v>=75?'#a3e635':v>=60?'#fbbf24':'#f87171';
+      if(A.efPct!=null||B.efPct!=null){
+        const fa=A.efPct!=null?`<span style="color:${ecol2(A.efPct)};font-weight:700">${A.efPct.toFixed(1)}%</span>`:'—';
+        const fb=B.efPct!=null?`<span style="color:${ecol2(B.efPct)};font-size:13px;font-weight:600">${B.efPct.toFixed(1)}%</span>`:'—';
+        let dH='';if(A.efPct!=null&&B.efPct!=null){const d=A.efPct-B.efPct,col=d>0?'#4f9e72':d<0?'#c96060':'#7d93b5',arr=d>0?'▲':d<0?'▼':'●';dH=`<div style="font-size:11px;color:${col};font-weight:600;margin-top:2px">${arr} ${d>0?'+':''}${d.toFixed(1)}pp</div>`;}
+        efEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:1px"><div>${fa}</div><div>${fb}</div>${dH}</div>`;
+        efEl.className='kpi-val';efEl.style.fontSize='';
+        if(efSEl)efSEl.textContent=`A: ${A.efFree}/${A.efPs} · B: ${B.efFree}/${B.efPs} error-free`;
+      } else {efEl.textContent='—';if(efSEl)efSEl.textContent='No EFLD data';}
+    }
+    // Hide Revised Forecasts in compare
+    const kpiRevEl=document.getElementById('kpi-rev');if(kpiRevEl)kpiRevEl.style.display='none';
+  } else {
+    // Normal mode
+    $$('k-tot').textContent=ps.length.toLocaleString();$$('k-tot').className='kpi-val';$$('k-tot').style.fontSize='';
+    $$('k-tot-s').textContent=`${A.sdCnt} with SD budget · ${A.pmCnt} with PM budget`;
+    setKpi('k-sd-agg',A.asd);setKpi('k-pm-agg',A.apm);
+    $$('k-sd-h').textContent=fmtH(A.totsd);$$('k-sd-b').textContent=`Budget: ${fmtN(A.tbsd)} h`;
+    $$('k-pm-h').textContent=fmtH(A.totpm);$$('k-pm-b').textContent=`Budget: ${fmtN(A.tbpm)} h`;
+    // EFLD normal
+    const efEl=$$('k-efld'),efSEl=$$('k-efld-s');
+    if(efEl){
+      if(A.efPs>0){const ecol2=v=>v>=90?'#34d399':v>=75?'#a3e635':v>=60?'#fbbf24':'#f87171';efEl.innerHTML=`<span style="color:${ecol2(A.efPct)};font-weight:700">${A.efPct.toFixed(1)}%</span>`;efEl.className='kpi-val';efEl.style.fontSize='';if(efSEl)efSEl.textContent=`${A.efFree} / ${A.efPs} error-free`;}
+      else{efEl.textContent='—';if(efSEl)efSEl.textContent='No EFLD data available';}
+    }
+    const revPs=ps.filter(p=>p.delta_sd!=null||p.delta_pm!=null);
+    const kpiRevEl=document.getElementById('kpi-rev');
+    if(kpiRevEl){if(revPs.length>0){kpiRevEl.style.display='';$$('k-rev').textContent=revPs.length;const avgDsd=revPs.reduce((s,p)=>s+Math.abs(p.delta_sd||0),0)/revPs.length,avgDpm=revPs.reduce((s,p)=>s+Math.abs(p.delta_pm||0),0)/revPs.length;$$('k-rev-s').textContent='Avg Δ SD: '+avgDsd.toFixed(1)+'h · PM: '+avgDpm.toFixed(1)+'h';}else kpiRevEl.style.display='none';}
+  }
+
+  // ── Charts ──
+  const effRanges=[[50,Infinity],[20,50],[0,20],[-50,0],[-100,-50],[-200,-100],[-Infinity,-200]];
+  const bl=['> +50%','+20–50%','0–+20%','0–−50%','−50–−100%','−100–−200%','< −200%'];
+  const bkt=(key,p2)=>{const b=[0,0,0,0,0,0,0];for(const p of p2){const v=p[key];if(v==null)continue;if(v>50)b[0]++;else if(v>20)b[1]++;else if(v>=0)b[2]++;else if(v>=-50)b[3]++;else if(v>=-100)b[4]++;else if(v>=-200)b[5]++;else b[6]++}return b};
+
+  if(cmp){
+    const cmpBar=(cid,key)=>{mc(cid,'bar',{labels:bl,datasets:[{label:'A',data:bkt(key,ps),backgroundColor:DC,borderRadius:3},{label:'B',data:bkt(key,psB),backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}]},{plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},scales:{x:{categoryPercentage:0.75,barPercentage:0.9}}});};
+    cmpBar('c-sd-d','sd_eff');cmpBar('c-pm-d','pm_eff');
+    addChartClick('c-sd-d',(lbl,idx,di)=>{const src=di===1?psB:window._ovPs,per=di===1?'B':'A';return{title:`SD Efficiency: ${lbl} (Period ${per})`,subtitle:``,projects:src.filter(p=>{const v=p.sd_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})};});
+    addChartClick('c-pm-d',(lbl,idx,di)=>{const src=di===1?psB:window._ovPs,per=di===1?'B':'A';return{title:`PM Efficiency: ${lbl} (Period ${per})`,subtitle:``,projects:src.filter(p=>{const v=p.pm_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})};});
+    // Project Type Mix — two small doughnuts side-by-side
+    const tWrap=document.getElementById('c-type-wrap'),tCmp=document.getElementById('c-type-cmp');
+    if(tWrap)tWrap.style.display='none';if(tCmp)tCmp.style.display='';
+    const tcA={},tcB={};ps.forEach(p=>{if(p.projectType)tcA[p.projectType]=(tcA[p.projectType]||0)+1});psB.forEach(p=>{if(p.projectType)tcB[p.projectType]=(tcB[p.projectType]||0)+1});
+    const allT=[...new Set([...Object.keys(tcA),...Object.keys(tcB)])].sort((a,b)=>((tcA[b]||0)+(tcB[b]||0))-((tcA[a]||0)+(tcB[a]||0)));
+    const mkD=(id,data,lbl)=>mc(id,'doughnut',{labels:allT,datasets:[{data,backgroundColor:PAL,borderWidth:1,borderColor:'#131929'}]},{plugins:{legend:{display:false},tooltip:{backgroundColor:'#131929',borderColor:'#222f48',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#dce3ef',padding:10,callbacks:{title:i=>i[0].label,label:i=>`${lbl}: ${i.parsed} projects`}}},scales:{x:{display:false},y:{display:false}}});
+    mkD('c-type-a',allT.map(t=>tcA[t]||0),'Period A');mkD('c-type-b',allT.map(t=>tcB[t]||0),'Period B');
+    const aT=document.getElementById('c-type-a-count'),bT=document.getElementById('c-type-b-count');
+    if(aT)aT.textContent=`${A.cnt} projects`;if(bT)bT.textContent=`${B.cnt} projects`;
+    addChartClick('c-type-a',lbl=>({title:`Type: ${lbl} (A)`,subtitle:``,projects:window._ovPs.filter(p=>p.projectType===lbl)}));
+    addChartClick('c-type-b',lbl=>({title:`Type: ${lbl} (B)`,subtitle:``,projects:psB.filter(p=>p.projectType===lbl)}));
+    // Complexity side-by-side
+    const cmA={},cmB={};ps.forEach(p=>{if(p.complexity&&p.sd_eff!=null){if(!cmA[p.complexity])cmA[p.complexity]=[];cmA[p.complexity].push(p.sd_eff);}});psB.forEach(p=>{if(p.complexity&&p.sd_eff!=null){if(!cmB[p.complexity])cmB[p.complexity]=[];cmB[p.complexity].push(p.sd_eff);}});
+    const allCk=[...new Set([...Object.keys(cmA),...Object.keys(cmB)])].sort();
+    mc('c-cplx','bar',{labels:allCk.map(k=>k.slice(0,10)),datasets:[{label:'A',data:allCk.map(k=>cmA[k]?.length?med(cmA[k]):null),backgroundColor:allCk.map(k=>ecol(cmA[k]?.length?med(cmA[k]):null)),borderRadius:3},{label:'B',data:allCk.map(k=>cmB[k]?.length?med(cmB[k]):null),backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}]},{plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},scales:{x:{categoryPercentage:0.75,barPercentage:0.9}}});
+    addChartClick('c-cplx',(lbl,idx,di)=>{const src=di===1?psB:window._ovPs;return{title:`Complexity: ${allCk[idx]} (${di===1?'B':'A'})`,subtitle:``,projects:src.filter(p=>p.complexity===allCk[idx])};});
+    // Hours by SL side-by-side
+    const shA={},shB={};ps.forEach(p=>{if(p.serviceLine)shA[p.serviceLine]=(shA[p.serviceLine]||0)+p.itime_sd+p.itime_pm});psB.forEach(p=>{if(p.serviceLine)shB[p.serviceLine]=(shB[p.serviceLine]||0)+p.itime_sd+p.itime_pm});
+    const uSL=[...new Set([...Object.keys(shA),...Object.keys(shB)])].sort((a,b)=>((shA[b]||0)+(shB[b]||0))-((shA[a]||0)+(shB[a]||0))).slice(0,8);
+    mc('c-sl-ov','bar',{labels:uSL.map(s=>s.split(' - ')[0]),datasets:[{label:'A',data:uSL.map(s=>Math.round(shA[s]||0)),backgroundColor:'#5b8dd9',borderRadius:3},{label:'B',data:uSL.map(s=>Math.round(shB[s]||0)),backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}]},{plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},indexAxis:'y',scales:{y:{categoryPercentage:0.75,barPercentage:0.9}}});
+    addChartClick('c-sl-ov',(lbl,idx,di)=>{const src=di===1?psB:window._ovPs;return{title:`Service Line: ${uSL[idx]} (${di===1?'B':'A'})`,subtitle:``,projects:src.filter(p=>p.serviceLine===uSL[idx])};});
+  } else {
+    mc('c-sd-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('sd_eff',ps),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
+    mc('c-pm-d','bar',{labels:bl,datasets:[{label:'Projects',data:bkt('pm_eff',ps),backgroundColor:DC,borderRadius:4}]},{plugins:{legend:{display:false}}});
+    addChartClick('c-sd-d',(lbl,idx)=>({title:`SD Efficiency: ${lbl}`,subtitle:``,projects:window._ovPs.filter(p=>{const v=p.sd_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})}));
+    addChartClick('c-pm-d',(lbl,idx)=>({title:`PM Efficiency: ${lbl}`,subtitle:``,projects:window._ovPs.filter(p=>{const v=p.pm_eff;if(v==null)return false;const[lo,hi]=effRanges[idx];return v>lo&&v<=hi})}));
+    const tWrap=document.getElementById('c-type-wrap'),tCmp=document.getElementById('c-type-cmp');
+    if(tWrap)tWrap.style.display='';if(tCmp)tCmp.style.display='none';
+    const tc={};ps.forEach(p=>{tc[p.projectType]=(tc[p.projectType]||0)+1});const te=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
+    mc('c-type','doughnut',{labels:te.map(t=>t[0]),datasets:[{data:te.map(t=>t[1]),backgroundColor:PAL,borderWidth:1,borderColor:'#131929'}]},{plugins:{legend:{position:'right',labels:{color:'#dce3ef',font:{family:'Inter',size:12},boxWidth:12,padding:8}}},scales:{x:{display:false},y:{display:false}}});
+    addChartClick('c-type',lbl=>({title:`Project Type: ${lbl}`,subtitle:``,projects:window._ovPs.filter(p=>p.projectType===lbl)}));
+    const cm={};ps.forEach(p=>{if(!p.complexity)return;if(!cm[p.complexity])cm[p.complexity]=[];if(p.sd_eff!=null)cm[p.complexity].push(p.sd_eff)});
+    const ck=Object.keys(cm).sort(),cv=ck.map(k=>med(cm[k]));
+    mc('c-cplx','bar',{labels:ck.map(k=>k.slice(0,10)),datasets:[{label:'Median SD Eff.',data:cv,backgroundColor:cv.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}}});
+    addChartClick('c-cplx',(lbl,idx)=>({title:`Complexity: ${ck[idx]}`,subtitle:``,projects:window._ovPs.filter(p=>p.complexity===ck[idx])}));
+    const sh={};ps.forEach(p=>{if(!p.serviceLine)return;sh[p.serviceLine]=(sh[p.serviceLine]||0)+p.itime_sd+p.itime_pm});
+    const se=Object.entries(sh).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    mc('c-sl-ov','bar',{labels:se.map(e=>e[0].split(' - ')[0]),datasets:[{label:'Total Hours',data:se.map(e=>Math.round(e[1])),backgroundColor:'#5b8dd9',borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
+    addChartClick('c-sl-ov',(lbl,idx)=>({title:`Service Line: ${se[idx][0]}`,subtitle:``,projects:window._ovPs.filter(p=>p.serviceLine===se[idx][0])}));
+  }
+
+  // ── Hours Breakdown tables ──
+  applyHrsBreakdownTable('t-hrs-sl','serviceLine',ps,psB,cmp);
+  $$('hrs-bdg').textContent=cmp?`A: ${fmtN(A.totsd+A.totpm)}h · B: ${fmtN(B.totsd+B.totpm)}h`:`${fmtN(A.totsd+A.totpm)} h total`;
+  applyHrsBreakdownTable('t-hrs-pt','projectType',ps,psB,cmp);
 }
 
 function renderTeams(ps){
+  const cmp=_compareMode&&(_periodB.size>0||_periodBYears.size>0);
+  const psB=cmp?filterPB():null;
+
   function tChart(cid,gk,et){
     const m=grp(ps,gk),ks=Object.keys(m).filter(Boolean).sort((a,b)=>(agg(m[b],et)??-9999)-(agg(m[a],et)??-9999));
     const vs=ks.map(k=>agg(m[k],et));
-    mc(cid,'bar',{labels:ks.map(k=>k.replace('EU SW ','').replace('IIS PM ','').replace('EU PM ','')),datasets:[{label:`Agg ${et.toUpperCase()} Eff. %`,data:vs,backgroundColor:vs.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
-    return{m,ks};
+    const abbr=k=>k.replace('EU SW ','').replace('IIS PM ','').replace('EU PM ','');
+    if(!cmp){
+      mc(cid,'bar',{labels:ks.map(abbr),datasets:[{label:`Agg ${et.toUpperCase()} Eff. %`,data:vs,backgroundColor:vs.map(ecol),borderRadius:4}]},{plugins:{legend:{display:false}},indexAxis:'y'});
+      return{m,ks,mB:null};
+    }
+    const mB=grp(psB,gk);
+    const uKs=[...new Set([...Object.keys(m),...Object.keys(mB)])].filter(Boolean).sort((a,b)=>(agg(m[b]||[],et)??-9999)-(agg(m[a]||[],et)??-9999));
+    mc(cid,'bar',{labels:uKs.map(abbr),datasets:[{label:'A',data:uKs.map(k=>agg(m[k]||[],et)),backgroundColor:uKs.map(k=>ecol(agg(m[k]||[],et))),borderRadius:3},{label:'B',data:uKs.map(k=>agg(mB[k]||[],et)),backgroundColor:'rgba(168,85,247,.75)',borderColor:'#a855f7',borderWidth:1,borderRadius:3}]},{plugins:{legend:{display:true,labels:{color:'#7d93b5',font:{family:'Inter',size:11},boxWidth:10,padding:6}}},indexAxis:'y',scales:{y:{categoryPercentage:0.75,barPercentage:0.9}}});
+    return{m,ks:uKs,mB};
   }
-  const{m:sm,ks:sk}=tChart('c-sw','swTeam','sd');
-  const{m:pm,ks:pk}=tChart('c-pm','pmTeam','pm');
-  $$('sw-bdg').textContent=`${sk.length} teams`;$$('pm-bdg').textContent=`${pk.length} teams`;
-  // Chart click handlers — SW team bar → projects of that team
-  addChartClick('c-sw',(lbl,idx)=>{
-    const fullKey=sk[idx]||'';
-    return{title:`SW Team: ${fullKey}`,subtitle:`All projects of this SW team`,projects:sm[fullKey]||[]};
-  });
-  addChartClick('c-pm',(lbl,idx)=>{
-    const fullKey=pk[idx]||'';
-    return{title:`PM Team: ${fullKey}`,subtitle:`All projects of this PM team`,projects:pm[fullKey]||[]};
-  });
-  function tTbl(tid,m,ks,et){
-    const bk=et==='sd'?'budget_sd':'budget_pm',ik=et==='sd'?'itime_sd':'itime_pm',ek=et==='sd'?'sd_eff':'pm_eff';
-    $$(tid).innerHTML=ks.map(k=>{
-      const p2=m[k],bd=p2.reduce((s,p)=>s+p[bk],0),it=p2.reduce((s,p)=>s+p[ik],0);
-      const ag=bd>0?(bd-it)/bd*100:null,vs=p2.map(p=>p[ek]).filter(v=>v!=null),md=vs.length?med(vs):null;
-      const pct=Math.min(100,Math.max(0,(ag??0)+100))/200*100;
-      return`<tr>
-        <td>${k}</td><td>${p2.length}</td><td><span class="eb ${ecls(md)}">${fmt(md)}</span></td>
-        <td><div class="bc"><div class="bb"><div class="bf" style="width:${pct}%;background:${ecol(ag)}"></div></div><span class="eb ${ecls(ag)}">${fmt(ag)}</span></div></td>
-        <td>${fmtN(it)}</td><td>${fmtN(bd)}</td></tr>`;
-    }).join('');
-  }
-  tTbl('t-sw',sm,sk,'sd');tTbl('t-pm',pm,pk,'pm');
 
-  // Hours breakdown by SW team
-  function hrsRow2(label,p2){
-    const isd=p2.reduce((s,p)=>s+p.itime_sd,0),bsd=p2.reduce((s,p)=>s+p.budget_sd,0);
-    const ipm=p2.reduce((s,p)=>s+p.itime_pm,0),bpm=p2.reduce((s,p)=>s+p.budget_pm,0);
-    const dsd=bsd>0?isd-bsd:null,dpm=bpm>0?ipm-bpm:null;
-    const asd2=bsd>0?(bsd-isd)/bsd*100:null,apm2=bpm>0?(bpm-ipm)/bpm*100:null;
-    const dC=v=>v==null?'':v>0?'style="color:var(--neg)"':'style="color:var(--pos)"';
-    const dF=v=>v==null?'—':(v>0?'+':'')+Math.round(v).toLocaleString()+' h';
-    return`<tr><td style="font-weight:500">${label}</td><td>${p2.length}</td>
-      <td>${fmtN(isd)}</td><td>${fmtN(bsd)}</td><td ${dC(dsd)}>${dF(dsd)}</td>
-      <td>${fmtN(ipm)}</td><td>${fmtN(bpm)}</td><td ${dC(dpm)}>${dF(dpm)}</td>
-      <td style="font-weight:600">${fmtN(isd+ipm)}</td><td style="font-weight:600">${fmtN(bsd+bpm)}</td>
-      <td><span class="eb ${ecls(asd2)}">${fmt(asd2)}</span></td>
-      <td><span class="eb ${ecls(apm2)}">${fmt(apm2)}</span></td></tr>`;
+  const{m:sm,ks:sk,mB:smB}=tChart('c-sw','swTeam','sd');
+  const{m:pm2,ks:pk,mB:pmB}=tChart('c-pm','pmTeam','pm');
+  $$('sw-bdg').textContent=cmp?`A:${Object.keys(sm).filter(Boolean).length} · B:${Object.keys(smB||{}).filter(Boolean).length} teams`:`${sk.length} teams`;
+  $$('pm-bdg').textContent=cmp?`A:${Object.keys(pm2).filter(Boolean).length} · B:${Object.keys(pmB||{}).filter(Boolean).length} teams`:`${pk.length} teams`;
+
+  if(cmp){
+    addChartClick('c-sw',(lbl,idx,di)=>{const k=sk[idx]||'',src=di===1?(smB[k]||[]):(sm[k]||[]);return{title:`SW Team: ${k} (Period ${di===1?'B':'A'})`,subtitle:``,projects:src};});
+    addChartClick('c-pm',(lbl,idx,di)=>{const k=pk[idx]||'',src=di===1?(pmB[k]||[]):(pm2[k]||[]);return{title:`PM Team: ${k} (Period ${di===1?'B':'A'})`,subtitle:``,projects:src};});
+  } else {
+    addChartClick('c-sw',(lbl,idx)=>{const k=sk[idx]||'';return{title:`SW Team: ${k}`,subtitle:``,projects:sm[k]||[]};});
+    addChartClick('c-pm',(lbl,idx)=>{const k=pk[idx]||'';return{title:`PM Team: ${k}`,subtitle:``,projects:pm2[k]||[]};});
   }
-  const swtk=Object.keys(sm).filter(Boolean).sort((a,b)=>sm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-sm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
-  $$('t-hrs-swt').innerHTML=swtk.map(k=>hrsRow2(k,sm[k])).join('')+hrsRow2('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
-  const pmtk=Object.keys(pm).filter(Boolean).sort((a,b)=>pm[b].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0)-pm[a].reduce((s,p)=>s+p.itime_sd+p.itime_pm,0));
-  $$('t-hrs-pmt').innerHTML=pmtk.map(k=>hrsRow2(k,pm[k])).join('')+hrsRow2('TOTAL',ps).replace('<tr>','<tr style="background:rgba(56,189,248,.06);border-top:2px solid var(--border)">');
+
+  // Team detail tables
+  function tTblRow(k,p2,et){
+    const bk=et==='sd'?'budget_sd':'budget_pm',ik=et==='sd'?'itime_sd':'itime_pm',ek=et==='sd'?'sd_eff':'pm_eff';
+    const bd=p2.reduce((s,p)=>s+p[bk],0),it=p2.reduce((s,p)=>s+p[ik],0);
+    const ag=bd>0?(bd-it)/bd*100:null,vs=p2.map(p=>p[ek]).filter(v=>v!=null),md=vs.length?med(vs):null;
+    const pct=Math.min(100,Math.max(0,(ag??0)+100))/200*100;
+    const efPs=p2.filter(p=>p.efld!=null),efFree=efPs.filter(p=>p.efld===0).length;
+    const efPct=efPs.length?efFree/efPs.length*100:null;
+    const efCol=efPct==null?'#3d5070':efPct>=90?'#34d399':efPct>=75?'#a3e635':efPct>=60?'#fbbf24':'#f87171';
+    const efCell=efPct==null?`<td style="color:#3d5070">—</td>`:`<td><span style="color:${efCol};font-weight:600">${efPct.toFixed(1)}%</span></td>`;
+    return`<tr><td>${k}</td><td>${p2.length}</td>${efCell}<td><span class="eb ${ecls(md)}">${fmt(md)}</span></td><td><div class="bc"><div class="bb"><div class="bf" style="width:${pct}%;background:${ecol(ag)}"></div></div><span class="eb ${ecls(ag)}">${fmt(ag)}</span></div></td><td>${fmtN(it)}</td><td>${fmtN(bd)}</td></tr>`;
+  }
+  function tTblPair(k,pA,pB,et){
+    const bk=et==='sd'?'budget_sd':'budget_pm',ik=et==='sd'?'itime_sd':'itime_pm',ek=et==='sd'?'sd_eff':'pm_eff';
+    const calc=p2=>{
+      const bd=p2.reduce((s,p)=>s+p[bk],0),it=p2.reduce((s,p)=>s+p[ik],0);
+      const ag=bd>0?(bd-it)/bd*100:null,vs=p2.map(p=>p[ek]).filter(v=>v!=null),md=vs.length?med(vs):null;
+      const efPs=p2.filter(p=>p.efld!=null),efFree=efPs.filter(p=>p.efld===0).length;
+      return{bd,it,ag,md,cnt:p2.length,efPct:efPs.length?efFree/efPs.length*100:null};
+    };
+    const a=calc(pA),b=calc(pB);
+    const pctA=Math.min(100,Math.max(0,(a.ag??0)+100))/200*100,pctB=Math.min(100,Math.max(0,(b.ag??0)+100))/200*100;
+    const aBdg=`<span style="background:#1e2d45;color:#e2e8f0;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">A</span>`;
+    const bBdg=`<span style="background:#4c1d95;color:#e9d5ff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px">B</span>`;
+    const efCol=v=>v==null?'#3d5070':v>=90?'#34d399':v>=75?'#a3e635':v>=60?'#fbbf24':'#f87171';
+    const efA=a.efPct==null?`<td style="color:#3d5070">—</td>`:`<td><span style="color:${efCol(a.efPct)};font-weight:600">${a.efPct.toFixed(1)}%</span></td>`;
+    const efB=b.efPct==null?`<td style="color:#3d5070">—</td>`:`<td><span style="color:${efCol(b.efPct)};font-weight:600">${b.efPct.toFixed(1)}%</span></td>`;
+    return`<tr style="border-bottom:1px dashed rgba(91,141,217,.15)"><td rowspan="2" style="font-weight:500">${k}</td><td>${aBdg}${a.cnt}</td>${efA}<td><span class="eb ${ecls(a.md)}">${fmt(a.md)}</span></td><td><div class="bc"><div class="bb"><div class="bf" style="width:${pctA}%;background:${ecol(a.ag)}"></div></div><span class="eb ${ecls(a.ag)}">${fmt(a.ag)}</span></div></td><td>${fmtN(a.it)}</td><td>${fmtN(a.bd)}</td></tr><tr style="background:rgba(168,85,247,.04);border-bottom:1px solid var(--border)"><td>${bBdg}${b.cnt}</td>${efB}<td><span class="eb ${ecls(b.md)}">${fmt(b.md)}</span></td><td><div class="bc"><div class="bb"><div class="bf" style="width:${pctB}%;background:${ecol(b.ag)}"></div></div><span class="eb ${ecls(b.ag)}">${fmt(b.ag)}</span></div></td><td style="color:#c4b5fd">${fmtN(b.it)}</td><td style="color:#c4b5fd">${fmtN(b.bd)}</td></tr>`;
+  }
+  function tTbl(tid,gA,gB,et){
+    const keys=cmp?[...new Set([...Object.keys(gA),...Object.keys(gB||{})])].filter(Boolean).sort((a,b)=>(agg(gA[b]||[],et)??-9999)-(agg(gA[a]||[],et)??-9999)):Object.keys(gA).filter(Boolean).sort((a,b)=>(agg(gA[b],et)??-9999)-(agg(gA[a],et)??-9999));
+    $$(tid).innerHTML=cmp?keys.map(k=>tTblPair(k,gA[k]||[],(gB||{})[k]||[],et)).join(''):keys.map(k=>tTblRow(k,gA[k],et)).join('');
+  }
+  tTbl('t-sw',sm,smB,'sd');tTbl('t-pm',pm2,pmB,'pm');
+
+  // Hours breakdown by SW/PM team
+  applyHrsBreakdownTable('t-hrs-swt','swTeam',ps,psB,cmp);
+  applyHrsBreakdownTable('t-hrs-pmt','pmTeam',ps,psB,cmp);
 }
 
 function renderSL(ps){
@@ -2671,33 +3007,46 @@ function addChartClick(chartId, getProjects){
 // SORTABLE TABLES
 const _sortState={};
 function sortHrsTable(tblId,colIdx,type,thEl){
-  const tbody=document.querySelector('#'+tblId+' tbody');
-  if(!tbody)return;
-  const rows=Array.from(tbody.querySelectorAll('tr:not([style*="border-top:2px"])'));
-  const totalRow=tbody.querySelector('tr[style*="border-top:2px"]');
+  const tbody=document.querySelector('#'+tblId+' tbody');if(!tbody)return;
+  const allRows=Array.from(tbody.querySelectorAll('tr'));
+  const isPaired=allRows.some(r=>r.cells[0]&&r.cells[0].hasAttribute('rowspan'));
   const key=tblId+'-'+colIdx;
   const prev=_sortState[key]||'none';
   const dir=prev==='asc'?'desc':'asc';
   _sortState[key]=dir;
-  // Reset all th icons in this table
-  document.querySelectorAll('#'+tblId+' .sortable-th').forEach(th=>{th.classList.remove('asc','desc')});
+  document.querySelectorAll('#'+tblId+' .sortable-th').forEach(th=>th.classList.remove('asc','desc'));
   thEl.classList.add(dir);
-  function val(row){
-    const td=row.cells[colIdx];if(!td)return 0;
-    const txt=td.textContent.trim();
+  function parseVal(txt){
     if(type==='str')return txt.toLowerCase();
     if(type==='num'){const n=parseFloat(txt.replace(/[^0-9.-]/g,''));return isNaN(n)?-Infinity:n}
     if(type==='delta'){const n=parseFloat(txt.replace(/[^0-9.+-]/g,'').replace(/\+/,''));return isNaN(n)?-Infinity:n}
     if(type==='eff'){const n=parseFloat(txt.replace('%','').replace(/[^0-9.+-]/g,''));return isNaN(n)?-Infinity:n}
     return txt;
   }
-  rows.sort((a,b)=>{
-    const av=val(a),bv=val(b);
-    if(type==='str')return dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
-    return dir==='asc'?av-bv:bv-av;
-  });
-  rows.forEach(r=>tbody.appendChild(r));
-  if(totalRow)tbody.appendChild(totalRow);
+  if(!isPaired){
+    const totalRow=tbody.querySelector('tr[style*="border-top:2px"]');
+    const rows=allRows.filter(r=>r!==totalRow);
+    rows.sort((a,b)=>{const av=parseVal(a.cells[colIdx]?.textContent.trim()||''),bv=parseVal(b.cells[colIdx]?.textContent.trim()||'');return type==='str'?dir==='asc'?av.localeCompare(bv):bv.localeCompare(av):dir==='asc'?av-bv:bv-av;});
+    rows.forEach(r=>tbody.appendChild(r));if(totalRow)tbody.appendChild(totalRow);
+    return;
+  }
+  // Paired mode — chunk into {aRow, bRow} pairs
+  const pairs=[],totalPairs=[];
+  for(let i=0;i<allRows.length;i+=2){
+    const aRow=allRows[i],bRow=allRows[i+1];if(!bRow)break;
+    if(aRow.getAttribute('style')?.includes('border-top:2px')){totalPairs.push({aRow,bRow});}
+    else pairs.push({aRow,bRow});
+  }
+  function pairVal(pair){
+    if(colIdx===0){const td=pair.aRow.cells[0];return parseVal(td?td.textContent.trim():'');}
+    const aTd=pair.aRow.cells[colIdx],bTd=pair.bRow.cells[colIdx-1];
+    const aV=aTd?parseVal(aTd.textContent.trim()):(type==='str'?'':-Infinity);
+    const bV=bTd?parseVal(bTd.textContent.trim()):(type==='str'?'':-Infinity);
+    return type==='str'?String(aV):Math.max(aV,bV);
+  }
+  pairs.sort((a,b)=>{const av=pairVal(a),bv=pairVal(b);return type==='str'?dir==='asc'?av.localeCompare(bv):bv.localeCompare(av):dir==='asc'?av-bv:bv-av;});
+  pairs.forEach(p=>{tbody.appendChild(p.aRow);tbody.appendChild(p.bRow);});
+  totalPairs.forEach(p=>{tbody.appendChild(p.aRow);tbody.appendChild(p.bRow);});
 }
 
 
@@ -2732,6 +3081,13 @@ window.drawerSearch = drawerSearch;
 window.exportDrawerCSV = exportDrawerCSV;
 window.msSel = msSel;
 window.msSearch = msSearch;
+window.toggleCompare = toggleCompare;
+window.msToggleMonthB = msToggleMonthB;
+window.msSelMonthB = msSelMonthB;
+window.msSearchMonthB = msSearchMonthB;
+window.msToggleYearB = msToggleYearB;
+window.msSelYearB = msSelYearB;
+window.msSearchYearB = msSearchYearB;
 
 // ─────────────────────────────────────────────────────────────
 // MODULE API — called by shell
@@ -3103,6 +3459,12 @@ function parseWB(wb, fname) {
       deltaSd: iq.fMax>1 ? (iq.sd-iq.f1sd)/waveCount : null,
       deltaPm: iq.fMax>1 ? (iq.pm-iq.f1pm)/waveCount : null,
       revCount: iq.fMax,
+      clientChanges: r['DIARY Client Changes']!=null&&r['DIARY Client Changes']!==''?parseInt(r['DIARY Client Changes']):null,
+      setupDays: (r['TIMING Actual 1st link to RE']!=null&&r['TIMING Actual SW Assignment']!=null&&
+                  parseFloat(r['TIMING Actual 1st link to RE'])>0&&parseFloat(r['TIMING Actual SW Assignment'])>0)
+                ? Math.max(0, parseFloat(r['TIMING Actual 1st link to RE'])-parseFloat(r['TIMING Actual SW Assignment']))
+                : null,
+      efld: r['EFLD']!=null&&r['EFLD']!==''?parseFloat(r['EFLD']):null,
     });
     } // end for rows
   } // end for jbGroups
@@ -3610,12 +3972,35 @@ function renderSummary(ps, people) {
     }
   }
 
+  // ── High Revision Pressure (IQR-based outlier detection) ──
+  // Projects with clientChanges significantly above peers (Q3 + 1.5*IQR)
+  const ccVals = ps.map(p=>p.clientChanges).filter(v=>v!=null&&!isNaN(v)).sort((a,b)=>a-b);
+  let highRevCount=0, _kpiHighRevRows=[];
+  if(ccVals.length>=4) {
+    const q1=ccVals[Math.floor(ccVals.length*0.25)];
+    const q3=ccVals[Math.floor(ccVals.length*0.75)];
+    const iqr=q3-q1;
+    const threshold=q3+1.5*iqr;
+    _kpiHighRevRows=ps.filter(p=>p.clientChanges!=null&&p.clientChanges>threshold).map(p=>{
+      const pp=_ppLookup[p.sw+'|'+p.jb]||_ppLookup[p.qa+'|'+p.jb]||{};
+      return{name:p.name,jb:p.jb,sw:p.sw,qa:p.qa,pm:p.pm,
+        complexity:p.complexity,sdEff:p.sdEff,
+        itime:pp.itime||p.itimeSd,
+        clientChanges:p.clientChanges,
+        label:`Changes: ${p.clientChanges} (threshold: ${Math.round(threshold)})`};
+    });
+    highRevCount=_kpiHighRevRows.length;
+    window.getMgmtHighRevRows=()=>_kpiHighRevRows;
+  }
+
   // ── Update DOM ──
   document.getElementById('s-ghost').textContent = ghostPeople.size;
   document.getElementById('s-high-hours-vs-budget').textContent = skaterPeople.size;
   document.getElementById('s-flags').textContent = flagCount;
   document.getElementById('s-inv').textContent = inversions;
   document.getElementById('s-people').textContent = people.length;
+  const hrEl=document.getElementById('s-high-rev');
+  if(hrEl) hrEl.textContent = highRevCount;
 }
 
 
