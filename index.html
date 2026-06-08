@@ -1449,6 +1449,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 
   <!-- TAB: PEOPLE OVERVIEW -->
   <div id="tab-overview" class="tab-panel">
+    <!-- Speed × Quality scatter -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Speed × Quality — Setup Days vs EFLD %</div>
+      <div class="card-sub">Each dot is a person · X = median setup days · Y = EFLD % (error-free rate) · size = projects · requires ≥5 projects with both metrics</div>
+      <div class="chart-wrap" style="height:320px"><canvas id="c-sq-scatter"></canvas></div>
+    </div>
     <div class="card">
       <div class="card-title">Full People Intelligence Table</div>
       <div class="card-sub">All SW/QA/PM people with iTime activity · click column to sort</div>
@@ -1480,6 +1486,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
             <th onclick="sortPeople('budgetH')" style="cursor:pointer">Budget h ⇅</th>
             <th onclick="sortPeople('sdEff')" style="cursor:pointer">SD Eff. ⇅</th>
             <th onclick="sortPeople('pmEff')" style="cursor:pointer">PM Eff. ⇅</th>
+            <th onclick="sortPeople('efldPct')" style="cursor:pointer">EFLD % ⇅</th>
+            <th onclick="sortPeople('avgChanges')" style="cursor:pointer">Avg Changes ⇅</th>
+            <th onclick="sortPeople('setupDaysMed')" style="cursor:pointer">Setup Days ⇅</th>
+            <th onclick="sortPeople('binomPVal')" style="cursor:pointer">Quality Signal ⇅</th>
             <th onclick="sortPeople('score')" style="cursor:pointer">Risk Score ⇅</th>
           </tr></thead>
           <tbody></tbody>
@@ -1544,11 +1554,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
         <th onclick="mgmtDSort(3,'str',this)">QA<span class="si"></span></th>
         <th onclick="mgmtDSort(4,'str',this)">PM<span class="si"></span></th>
         <th onclick="mgmtDSort(5,'num',this)">Complexity<span class="si"></span></th>
-        <th onclick="mgmtDSort(6,'num',this)">iTime SD<span class="si"></span></th>
-        <th onclick="mgmtDSort(7,'num',this)">Budget SD (split)<span class="si"></span></th>
-        <th onclick="mgmtDSort(8,'num',this)">Ratio<span class="si"></span></th>
-        <th onclick="mgmtDSort(9,'num',this)">Z-score<span class="si"></span></th>
-        <th onclick="mgmtDSort(10,'num',this)">SD Eff.<span class="si"></span></th>
+        <th onclick="mgmtDSort(6,'num',this)" id="mgmt-dh-changes">Client Changes<span class="si"></span></th>
+        <th onclick="mgmtDSort(7,'num',this)">iTime SD<span class="si"></span></th>
+        <th onclick="mgmtDSort(8,'num',this)">Budget SD (split)<span class="si"></span></th>
+        <th onclick="mgmtDSort(9,'num',this)">Ratio<span class="si"></span></th>
+        <th onclick="mgmtDSort(10,'num',this)">Z-score<span class="si"></span></th>
+        <th onclick="mgmtDSort(11,'num',this)">SD Eff.<span class="si"></span></th>
       </tr></thead>
       <tbody id="mgmt-dtable-body"></tbody>
     </table>
@@ -3289,6 +3300,19 @@ function parseWB(wb, fname) {
   // ── Efficiency sheet ──
   const effSh = wb.Sheets['Efficiency'];
   const effRows = toRows(effSh);
+  // Raw rows needed for TIMING date serial numbers (raw:false formats them as strings → parseFloat gives year only)
+  const effRowsRaw = toRowsRaw(effSh);
+  // Build JB → raw timing map
+  const _timingMap = {};
+  for(const r of effRowsRaw) {
+    const jb = String(r['GEN_INFO JobBook']||'').trim();
+    if(!jb) continue;
+    const sw = r['TIMING Actual SW Assignment'];
+    const re = r['TIMING Actual 1st link to RE'];
+    const swN = typeof sw==='number'?sw:(sw instanceof Date?sw.getTime()/86400000+25569:null);
+    const reN = typeof re==='number'?re:(re instanceof Date?re.getTime()/86400000+25569:null);
+    if(swN>0&&reN>0) _timingMap[jb] = Math.max(0, reN - swN);
+  }
 
   // ── iTime sheets (all YYYY) ──
   const itimeRows = [];
@@ -3460,10 +3484,7 @@ function parseWB(wb, fname) {
       deltaPm: iq.fMax>1 ? (iq.pm-iq.f1pm)/waveCount : null,
       revCount: iq.fMax,
       clientChanges: r['DIARY Client Changes']!=null&&r['DIARY Client Changes']!==''?parseInt(r['DIARY Client Changes']):null,
-      setupDays: (r['TIMING Actual 1st link to RE']!=null&&r['TIMING Actual SW Assignment']!=null&&
-                  parseFloat(r['TIMING Actual 1st link to RE'])>0&&parseFloat(r['TIMING Actual SW Assignment'])>0)
-                ? Math.max(0, parseFloat(r['TIMING Actual 1st link to RE'])-parseFloat(r['TIMING Actual SW Assignment']))
-                : null,
+      setupDays: _timingMap[jb]??null,
       efld: r['EFLD']!=null&&r['EFLD']!==''?parseFloat(r['EFLD']):null,
     });
     } // end for rows
@@ -3547,12 +3568,53 @@ function parseWB(wb, fname) {
       budgetH: assignedBudget,
       projects: assignedProjects.length,
       sdEff: aggSdEff, pmEff: aggPmEff,
+      // Client Changes — average per project
+      avgChanges: (()=>{
+        const cc=assignedProjects.filter(p=>p.clientChanges!=null);
+        return cc.length?cc.reduce((s,p)=>s+p.clientChanges,0)/cc.length:null;
+      })(),
+      // EFLD — error-free % for this person's projects
+      efldPct: (()=>{
+        const ep=assignedProjects.filter(p=>p.efld!=null);
+        return ep.length?ep.filter(p=>p.efld===0).length/ep.length*100:null;
+      })(),
+      efldN: assignedProjects.filter(p=>p.efld!=null).length,
+      efldErrors: assignedProjects.filter(p=>p.efld!=null&&p.efld>0).length,
+      // Setup time — median calendar days per project
+      setupDaysMed: (()=>{
+        const sd=assignedProjects.filter(p=>p.setupDays!=null).map(p=>p.setupDays).sort((a,b)=>a-b);
+        if(!sd.length) return null;
+        const m=Math.floor(sd.length/2);
+        return sd.length%2?sd[m]:(sd[m-1]+sd[m])/2;
+      })(),
     });
   }
 
   G.projects = projects;
   G.people = people;
   G.itime = itimeRows;
+
+  // ── Binomial quality test per person ──
+  // Baseline error rate from all projects with EFLD data
+  const allEfldPs = projects.filter(p=>p.efld!=null);
+  const baselineErrRate = allEfldPs.length>0
+    ? allEfldPs.filter(p=>p.efld>0).length / allEfldPs.length
+    : 0.05; // fallback 5%
+  // Binomial CDF: P(X >= k) = sum(C(n,i)*p^i*(1-p)^(n-i)) for i=k..n
+  function binomPVal(k, n, p) {
+    if(n<=0||k<=0) return 1;
+    function logC(n,k){let r=0;for(let i=0;i<k;i++)r+=Math.log(n-i)-Math.log(i+1);return r;}
+    let pv=0;
+    for(let i=k;i<=n;i++) pv+=Math.exp(logC(n,i)+i*Math.log(p)+(n-i)*Math.log(1-p));
+    return Math.min(1,pv);
+  }
+  G.people = G.people.map(p=>{
+    const pVal = (p.efldN>=5)
+      ? binomPVal(p.efldErrors, p.efldN, baselineErrRate)
+      : null;
+    return {...p, binomPVal:pVal, baselineErrRate};
+  });
+  G.baselineErrRate = baselineErrRate;
 
   // Populate filters
   populateFilters();
@@ -3744,6 +3806,7 @@ function mgtRenderAll() {
   renderSeniority(ps, people);
   renderFlags(ps);
   renderPeopleTable();
+  renderSQScatter();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3983,11 +4046,15 @@ function renderSummary(ps, people) {
     const threshold=q3+1.5*iqr;
     _kpiHighRevRows=ps.filter(p=>p.clientChanges!=null&&p.clientChanges>threshold).map(p=>{
       const pp=_ppLookup[p.sw+'|'+p.jb]||_ppLookup[p.qa+'|'+p.jb]||{};
+      const swF=getMgmtSplit('SW');
+      const totalItimeSd = p.itimeSd*(p.waveCount||1); // total logged SD hours
       return{name:p.name,jb:p.jb,sw:p.sw,qa:p.qa,pm:p.pm,
         complexity:p.complexity,sdEff:p.sdEff,
-        itime:pp.itime||p.itimeSd,
-        clientChanges:p.clientChanges,
-        label:`Changes: ${p.clientChanges} (threshold: ${Math.round(threshold)})`};
+        itime:pp.itime||totalItimeSd,
+        budgetSplit:p.budgetSd*(p.waveCount||1)*swF,
+        ratio:pp.ratio||(p.budgetSd>0?p.itimeSd/p.budgetSd:0),
+        z:pp.z||null, peerMedian:pp.peerMedian||null,
+        clientChanges:p.clientChanges};
     });
     highRevCount=_kpiHighRevRows.length;
     window.getMgmtHighRevRows=()=>_kpiHighRevRows;
@@ -4679,6 +4746,24 @@ function renderPeopleTable() {
   document.querySelector('#t-people-full tbody').innerHTML = people.map(p=>{
     const score = p.score;
     const scoreCol = score>=40?'var(--red)':score>=20?'var(--yellow)':'var(--green)';
+    // EFLD column
+    const efldCol=p.efldPct==null?'var(--dim)':p.efldPct>=90?'var(--green)':p.efldPct>=75?'#a3e635':p.efldPct>=60?'var(--yellow)':'var(--red)';
+    const efldCell=p.efldPct==null?'<td style="color:var(--dim)">—</td>'
+      :`<td><span style="color:${efldCol};font-weight:600">${p.efldPct.toFixed(0)}%</span><span style="color:var(--dim);font-size:10px"> ${p.efldN}p</span></td>`;
+    // Avg Changes column
+    const ccCell=p.avgChanges==null?'<td style="color:var(--dim)">—</td>'
+      :`<td class="mono" style="color:${p.avgChanges>8?'var(--red)':p.avgChanges>4?'var(--yellow)':'var(--dim)'}">${p.avgChanges.toFixed(1)}</td>`;
+    // Setup days column
+    const sdCell=p.setupDaysMed==null?'<td style="color:var(--dim)">—</td>'
+      :`<td class="mono" style="color:var(--dim)">${p.setupDaysMed.toFixed(1)}d</td>`;
+    // Binomial quality signal
+    let qCell='<td style="color:var(--dim)">—</td>';
+    if(p.binomPVal!=null){
+      const pv=p.binomPVal;
+      const col=pv<0.05?'var(--red)':pv<0.10?'var(--yellow)':'var(--green)';
+      const lbl=pv<0.05?'⚠ Flagged':pv<0.10?'~ Watch':'✓ OK';
+      qCell=`<td><span style="color:${col};font-size:11px;font-weight:600" title="p=${pv.toFixed(3)} · errors:${p.efldErrors}/${p.efldN} · baseline:${(p.baselineErrRate*100).toFixed(1)}%">${lbl}</span></td>`;
+    }
     return `<tr>
       <td class="name-cell">${p.name}</td>
       <td><span style="color:var(--accent);font-size:11px;font-weight:600">${p.roleGroup}</span></td>
@@ -4689,6 +4774,7 @@ function renderPeopleTable() {
       <td class="mono">${fmtN(p.budgetH)}</td>
       <td>${fmtEff(p.sdEff)}</td>
       <td>${fmtEff(p.pmEff)}</td>
+      ${efldCell}${ccCell}${sdCell}${qCell}
       <td><span style="color:${scoreCol};font-weight:600;font-size:12px">${score}</span>
         <div class="score-bar" style="margin-top:4px">
           <div class="score-seg" style="width:${score}%;background:${scoreCol};opacity:.6"></div>
@@ -4705,6 +4791,76 @@ function sortPeople(col) {
   renderPeopleTable();
 }
 
+function renderSQScatter() {
+  const canvas = document.getElementById('c-sq-scatter');
+  if(!canvas) return;
+  if(_charts['c-sq-scatter']){_charts['c-sq-scatter'].destroy();delete _charts['c-sq-scatter'];}
+  const people = filterPeople().filter(p=>
+    p.setupDaysMed!=null && p.efldPct!=null && p.efldN>=5
+  );
+  if(!people.length){canvas.style.display='none';return;}
+  canvas.style.display='';
+  const RG_COL={'SW':'#5b8dd9','QA':'#34d399','PM':'#f472b6'};
+  // Small random jitter to separate overlapping dots
+  const jit=()=>(Math.random()-0.5)*0.4;
+  const allSetup=people.map(p=>p.setupDaysMed).filter(v=>v>0);
+  const medSetup=allSetup.length?allSetup.sort((a,b)=>a-b)[Math.floor(allSetup.length/2)]:5;
+  const datasets = ['SW','QA','PM'].map(rg=>{
+    const pts = people.filter(p=>p.roleGroup===rg).map(p=>({
+      x: Math.round((p.setupDaysMed+jit())*10)/10,
+      y: Math.min(100,Math.max(0,p.efldPct+jit()*2)),
+      r: Math.max(6, Math.min(20, p.projects*1.0)),
+      _setupDaysMed: p.setupDaysMed,
+      _efldPct: p.efldPct,
+      name: p.name, projects: p.projects,
+      efldN: p.efldN, efldErr: p.efldErrors,
+      binomPVal: p.binomPVal
+    }));
+    return{label:rg, data:pts, backgroundColor:RG_COL[rg]+'cc', borderColor:RG_COL[rg], borderWidth:1};
+  }).filter(d=>d.data.length>0);
+  // Median lines for quadrant reference
+  const medEfld=people.map(p=>p.efldPct).sort((a,b)=>a-b);
+  const mEfld=medEfld[Math.floor(medEfld.length/2)]||80;
+  _charts['c-sq-scatter'] = new Chart(canvas.getContext('2d'),{
+    type:'bubble',
+    data:{datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#7d93b5',font:{family:'Inter',size:11}}},
+        annotation: undefined,
+        tooltip:{
+          backgroundColor:'#131929',borderColor:'#222f48',borderWidth:1,
+          titleColor:'#e2e8f0',bodyColor:'#7d93b5',padding:10,
+          callbacks:{
+            title:i=>[i[0].raw.name],
+            label:i=>{
+              const d=i.raw;
+              const pv=d.binomPVal!=null?` · p=${d.binomPVal.toFixed(3)}`:'';
+              const sd=d._setupDaysMed!=null?d._setupDaysMed.toFixed(1):'?';
+              return[`Setup: ${sd} days`,`EFLD: ${d._efldPct.toFixed(1)}% (${d.efldErr} errors/${d.efldN} proj)${pv}`,`Projects: ${d.projects}`];
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          title:{display:true,text:'Median Setup Days (calendar)',color:'#7d93b5',font:{family:'Inter',size:11}},
+          ticks:{color:'#7d93b5',font:{family:'Inter',size:11},callback:v=>v+'d'},
+          grid:{color:'rgba(34,47,72,.5)'},
+          min:0
+        },
+        y:{
+          title:{display:true,text:'EFLD % (error-free)',color:'#7d93b5',font:{family:'Inter',size:11}},
+          ticks:{color:'#7d93b5',font:{family:'Inter',size:11},callback:v=>v+'%'},
+          grid:{color:'rgba(34,47,72,.5)'},
+          min:0,max:105
+        }
+      }
+    }
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════
 // TAB SWITCHING
 // ═══════════════════════════════════════════════════════════════
@@ -4713,6 +4869,7 @@ function mgtSwitchTab(id, btn) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
+  if(id==='overview') { renderPeopleTable(); renderSQScatter(); }
 }
 
 
@@ -4803,7 +4960,7 @@ function mgmtDSort(col, type, th) {
   _mdFiltered.sort((a,b)=>{
     const getVal=(obj,c)=>[
       obj.name||'', String(obj.jb||''), obj.sw||'', obj.qa||'', obj.pm||'',
-      obj.complexity||0, obj.itime||0, obj.budgetSplit||0,
+      obj.complexity||0, obj.clientChanges??-1, obj.itime||0, obj.budgetSplit||0,
       obj.ratio||0, obj.z||0, obj.sdEff??-999
     ][c];
     const av=getVal(a,col), bv=getVal(b,col);
@@ -4815,21 +4972,44 @@ function mgmtDSort(col, type, th) {
 
 function renderMgmtDrawerTable() {
   const ps=_mdFiltered;
+  const isHighRev = ps.length>0 && ps[0].clientChanges!=null;
   const totalItime=ps.reduce((s,p)=>s+(p.itime||0),0);
   const totalBudget=ps.reduce((s,p)=>s+(p.budgetSplit||0),0);
   const avgRatio=ps.length?ps.reduce((s,p)=>s+(p.ratio||0),0)/ps.length:0;
   const medRef=ps.find(p=>p.peerMedian!=null);
 
   document.getElementById('mds-count').textContent=' '+ps.length;
-  document.getElementById('mds-itime').textContent=' '+totalItime.toFixed(1)+'h';
-  document.getElementById('mds-budget').textContent=' '+totalBudget.toFixed(1)+'h';
-  document.getElementById('mds-ratio').textContent=' '+avgRatio.toFixed(2)+'×';
-  document.getElementById('mds-peer').textContent=medRef?' '+medRef.peerMedian.toFixed(2)+'×':' —';
+  if(isHighRev){
+    const ccVals=ps.filter(p=>p.clientChanges!=null).map(p=>p.clientChanges);
+    const avgCC=ccVals.length?ccVals.reduce((s,v)=>s+v,0)/ccVals.length:0;
+    const maxCC=ccVals.length?Math.max(...ccVals):0;
+    document.getElementById('mds-itime').textContent=' avg '+avgCC.toFixed(1);
+    document.getElementById('mds-budget').textContent=' max '+maxCC;
+    document.getElementById('mds-ratio').textContent=' —';
+    document.getElementById('mds-peer').textContent=' —';
+    document.querySelector('#mds-itime').previousElementSibling.textContent='Avg Changes';
+    document.querySelector('#mds-budget').previousElementSibling.textContent='Max Changes';
+  } else {
+    document.getElementById('mds-itime').textContent=' '+totalItime.toFixed(1)+'h';
+    document.getElementById('mds-budget').textContent=' '+totalBudget.toFixed(1)+'h';
+    document.getElementById('mds-ratio').textContent=' '+avgRatio.toFixed(2)+'×';
+    document.getElementById('mds-peer').textContent=medRef?' '+medRef.peerMedian.toFixed(2)+'×':' —';
+    document.querySelector('#mds-itime').previousElementSibling.textContent='Total iTime SD';
+    document.querySelector('#mds-budget').previousElementSibling.textContent='Total Budget SD';
+  }
+
+  // Highlight Client Changes column header
+  const hdrCC=document.getElementById('mgmt-dh-changes');
+  if(hdrCC) hdrCC.style.color=isHighRev?'var(--green)':'var(--dim)';
 
   document.getElementById('mgmt-dtable-body').innerHTML=ps.length?ps.map(p=>{
     const rCol='var(--text)';
     const zCol=Math.abs(p.z||0)>=2?(p.z>0?'var(--red)':'var(--dim)'):Math.abs(p.z||0)>=1.5?'var(--yellow)':'var(--dim)';
     const effCol=p.sdEff==null?'var(--dim)':p.sdEff>=0?'var(--green)':p.sdEff>=-50?'var(--yellow)':'var(--red)';
+    const ccCol=p.clientChanges==null?'var(--dim)':p.clientChanges>15?'var(--red)':p.clientChanges>8?'var(--yellow)':'var(--dim)';
+    const ccCell=p.clientChanges!=null
+      ?`<td class="mono" style="color:${ccCol};font-weight:${p.clientChanges>8?'600':'400'}">${p.clientChanges}</td>`
+      :`<td style="color:var(--dim)">—</td>`;
     return `<tr>
       <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;font-weight:500" title="${p.name||''}">${p.name||p.jb}</td>
       <td style="color:var(--dim);font-size:11px">${p.jb||'—'}</td>
@@ -4837,13 +5017,14 @@ function renderMgmtDrawerTable() {
       <td style="color:var(--dim);font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis">${p.qa||'—'}</td>
       <td style="color:var(--dim);font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis">${p.pm||'—'}</td>
       <td class="mono" style="text-align:center">${p.complexity||'—'}</td>
+      ${ccCell}
       <td class="mono">${(p.itime||0).toFixed(1)}</td>
       <td class="mono">${(p.budgetSplit||0).toFixed(1)}</td>
       <td class="mono" style="color:${rCol};font-weight:600">${(p.ratio||0).toFixed(2)}×</td>
       <td class="mono" style="color:${zCol}">${p.z!=null?(p.z>=0?'+':'')+p.z.toFixed(1)+'σ':'—'}</td>
       <td class="mono" style="color:${effCol}">${p.sdEff!=null?p.sdEff.toFixed(1)+'%':'—'}</td>
     </tr>`;
-  }).join(''):'<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--dim)">No projects found</td></tr>';
+  }).join(''):'<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--dim)">No projects found</td></tr>';
 }
 
 document.addEventListener('DOMContentLoaded', initMgmtDrawerDrag);
@@ -4867,6 +5048,10 @@ window.resetFilters = resetFilters;
 window.sortPeerTable = sortPeerTable;
 window.sortPeople = sortPeople;
 window.syncMgmtSplit = syncMgmtSplit;
+// KPI row arrays — inline onclick handlers need global access
+Object.defineProperty(window,'_kpiGhostRows',{get:()=>_kpiGhostRows,configurable:true});
+Object.defineProperty(window,'_kpiSkaterRows',{get:()=>_kpiSkaterRows,configurable:true});
+Object.defineProperty(window,'_kpiFlagRows',{get:()=>_kpiFlagRows,configurable:true});
 window.toggleMS = toggleMS;
 window.showInfo = showInfo;
 
