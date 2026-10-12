@@ -2514,7 +2514,7 @@ function renderPeople(ps){
   const sdH={},qaH={},pmH={};
   for(const r of (G._itimeRows||[])){
     const proj=r[' Project #']??r['Project #'];if(!proj)continue;
-    const k=String(proj).trim();if(!projKeys.has(k))continue;
+    const k=String(proj).replace(/-/g,'').trim();if(!projKeys.has(k))continue;
     const tr=(r[' Title']??r['Title']??'').trim();
     const hrs=parseFloat(r[' Hours']??r['Hours'])||0;
     const fn=(r[' FName']??r['FName']??'').trim(),ln=(r[' LName']??r['LName']??'').trim(),nm=`${fn} ${ln}`.trim();
